@@ -231,7 +231,7 @@ const calm = () => document.documentElement.classList.contains('nk-still') || ma
 let parts = [], raf = 0;
 function confetti(x = innerWidth / 2, y = innerHeight / 2, n = 70) {
   if (calm()) return;
-  const cols = ['#a8dcff', '#b6efe0', '#dbf7cc', '#7fd3ff', '#6fe0b4', '#fff1bd', '#2f93cc', '#c7f0ff'];
+  const cols = ['#1b2d5c', '#7cc4ef', '#3a9ad9', '#3d8a7a', '#a6dcf7', '#f7c47e', '#dcf3ea'];
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 7;
     parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5, r: 4 + Math.random() * 5, c: cols[i % cols.length], rot: Math.random() * 6, vr: (Math.random() - .5) * .4, life: 90 + Math.random() * 40, sq: Math.random() > .5 });
@@ -348,12 +348,12 @@ homeView.body = () => {
       <div class="ring" style="--p:${pct}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bgc" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42"/></svg><b>${pct}%</b></div>
       <span class="l">${total ? `${todayLogs.length} מתוך ${total} משימות להיום` : 'אין משימות להיום 🎉'}</span></button>
     <button class="stat s-shop" data-go="shop"><span class="n">🛒 ${shopN}</span><span class="l">${shopN === 1 ? 'פריט ברשימה' : 'פריטים ברשימה'}</span></button>
-    <div class="stat s-pts"><span class="n">⭐ ${wp[S.meId] || 0}</span><span class="l">הנקודות שלי השבוע</span></div>
+    <button class="stat s-pts" data-go="family"><span class="n">⭐ ${wp[S.meId] || 0}</span><span class="l">הנקודות שלי השבוע</span></button>
   </div>
   <section class="card"><div class="card-h"><h2>📌 מחכה לי היום</h2><button class="link-btn" data-go="tasks">לכל המשימות ←</button></div>
     ${mine.length ? `<ul class="list">${mine.map(taskCard).join('')}</ul>` : `<div class="empty"><span class="big">🌈</span>אין משימות שמחכות לך היום. איזה כיף!</div>`}</section>
   <section class="card"><div class="card-h"><h2>🏆 אלופי השבוע</h2><span class="muted" style="font-size:.85rem">מתאפס כל יום ראשון</span></div>
-    <ol class="board">${board.map((b, i) => `<li class="${pop('b' + b.m.id)}" style="--i:${i}"><span class="medal">${['🥇', '🥈', '🥉'][i] || '✨'}</span>${avatar(b.m)}<div><b>${esc(b.m.name)}</b><div class="bar"><i style="--w:${Math.round(b.p / max * 100)}%"></i></div></div><span class="pts">${b.p}</span></li>`).join('')}</ol></section>
+    <ol class="board">${board.map((b, i) => `<li class="${pop('b' + b.m.id)}" style="--i:${i}"><button class="board-row" data-act="edit-member" data-id="${b.m.id}" aria-label="${esc(b.m.name)}: ${b.p} נקודות. עריכה"><span class="medal">${['🥇', '🥈', '🥉'][i] || '✨'}</span>${avatar(b.m)}<div><b>${esc(b.m.name)}</b><div class="bar"><i style="--w:${Math.round(b.p / max * 100)}%"></i></div></div><span class="pts">${b.p}</span></button></li>`).join('')}</ol></section>
   <section class="card"><h2 style="margin-bottom:12px">⚡ מה קרה לאחרונה</h2>
     ${feed.length ? `<ul class="feed">${feed.map(l => { const w = member(l.memberId); return `<li>${avatar(w, 'sm')}<span><b>${esc(w?.name || 'מישהו')}</b> ${esc(l.emoji || '✨')} ${esc(l.title)} <span class="muted">+${l.points}</span></span><time datetime="${l.at}">${ago(l.at)}</time></li>`; }).join('')}</ul>` : `<div class="empty"><span class="big">🐣</span>עוד לא סומנו משימות. הראשון/ה שמסמנים מקבלים קונפטי!</div>`}</section>
   ${credit}`;
@@ -619,7 +619,7 @@ function backup() {
 /* ----- ONBOARDING ----- */
 function onboarding(joinCode) {
   $('#tabbar').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
-  const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'lav'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'sky']];
+  const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'sky'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'sky']];
   main.innerHTML = `<div class="view onb">
     <section class="onb-hero">
       <div class="hero-badge" aria-hidden="true">
@@ -633,11 +633,11 @@ function onboarding(joinCode) {
       ${CLOUD ? '<button class="btn soft wide" data-act="join">🔑 יש לי קוד הצטרפות</button>' : '<div class="note">🔒 מצב מקומי: הנתונים נשמרים במכשיר הזה. לשיתוף עם בני הבית צריך לחבר את Supabase לפי ה-README.</div>'}
       <button class="link-btn" data-act="help">💡 איך זה עובד?</button></div>
     </section>
-    <section class="features">${feats.map(([e, t, d, c], i) => `<div class="feat c-${c}" style="--i:${i}"><span class="fe">${e}</span><b>${t}</b><small>${d}</small></div>`).join('')}</section>
+    <section class="features">${feats.map(([e, t, d, c], i) => `<button class="feat c-${c}" style="--i:${i}" data-act="help"><span class="fe">${e}</span><b>${t}</b><small>${d}</small></button>`).join('')}</section>
     <section class="steps card"><h2>🚀 שלושה צעדים וזהו</h2>
-      <ol><li><span>1</span><div><b>פותחים בית</b><small>נותנים לו שם ובוחרים דמות</small></div></li>
-      <li><span>2</span><div><b>מזמינים את בני הבית</b><small>קוד, קישור או QR בוואטסאפ</small></div></li>
-      <li><span>3</span><div><b>מסמנים וי ומקבלים נקודות</b><small>והבית נשאר מסודר לבד</small></div></li></ol></section>
+      <ol><li><button class="step" data-act="create"><span>1</span><div><b>פותחים בית</b><small>נותנים לו שם ובוחרים דמות</small></div><em>←</em></button></li>
+      <li><button class="step" data-act="${CLOUD ? 'join' : 'help'}"><span>2</span><div><b>מזמינים את בני הבית</b><small>${CLOUD ? 'קיבלתם קוד? לחצו כאן להצטרפות' : 'קוד, קישור או QR בוואטסאפ'}</small></div><em>←</em></button></li>
+      <li><button class="step" data-act="help"><span>3</span><div><b>מסמנים וי ומקבלים נקודות</b><small>איך זה עובד? לחצו כאן</small></div><em>←</em></button></li></ol></section>
   </div>`;
   if (joinCode && CLOUD) joinSheet(joinCode);
 }
@@ -719,6 +719,7 @@ document.addEventListener('click', e => {
   switch (a.dataset.act) {
     case 'close': closeSheet(); break;
     case 'help': helpSheet(); break;
+    case 'top': scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' }); break;
     case 'a11y': { const k = $('.nk-tab'); if (k) { k.scrollIntoView?.({ block: 'nearest' }); if (k.getAttribute('aria-expanded') !== 'true') k.click(); } break; }
     case 'theme': $('[data-nk-theme]')?.click(); break;
     case 'to-faq': closeSheet(); if (S.code && tab !== 'home') go('home'); setTimeout(() => { const f = $('#faq'); if (f) { f.hidden = false; f.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth' }); } }, 260); break;
