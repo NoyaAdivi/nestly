@@ -1,51 +1,97 @@
-<div align="center" dir="rtl">
+<div align="center">
 
-<a href="https://noyaadivi.github.io/nestly/"><img src="icon.svg" alt="הלוגו של Nestly" width="110"></a>
+[![הלוגו של Nestly](icon.svg)](https://noyaadivi.github.io/nestly/)
 
-# Nestly 🏡
+# Nestly
 
-**משימות הבית ורשימת קניות משותפת לכל בני הבית**
+[English](README.md) · **עברית**
 
-[![לאפליקציה](https://img.shields.io/badge/לאפליקציה-c9b8ff?style=for-the-badge&logo=googlechrome&logoColor=2d2a40)](https://noyaadivi.github.io/nestly/)
-[![English](https://img.shields.io/badge/English-ffc6dd?style=for-the-badge)](README.md)
+**הבית, ביחד** 🏡
 
 </div>
 
 <div dir="rtl">
 
+<p align="center">משימות הבית ורשימת קניות משותפת לכל המשפחה. כל אחד מצטרף מהטלפון שלו עם קישור או קוד, וכל שינוי מופיע אצל כולם תוך שניות.</p>
+
+<h3 align="center"><a href="https://noyaadivi.github.io/nestly/">🌐 לאתר החי: noyaadivi.github.io/nestly</a></h3>
+
+<p align="center"><a href="https://noyaadivi.github.io/nestly/"><img src="nestly.png" alt="צילום מסך של Nestly"></a></p>
+
+* * *
+
 ## ✨ מה יש בפנים
 
-| | |
-|---|---|
-| 🧹 **משימות חכמות** | כל יום, כל שבוע (בימים שבוחרים), כל כמה ימים או כל חודש. משימה שבוצעה עוברת לבד לתאריך הבא |
-| 🔄 **תורנות הוגנת** | משימה בתורנות עוברת לבן הבית הבא בכל פעם שמסמנים אותה |
-| 🏆 **נקודות ואלופי השבוע** | קל, בינוני וקשה שווים 5, 10 ו-20 נקודות. הטבלה מתאפסת כל יום ראשון |
-| 🛒 **רשימת קניות** | מיון אוטומטי לפי מחלקות בסופר, כמויות, הערות, הוספה בקול והצעות של "קונים הרבה" |
-| 💌 **הצטרפות בקישור, קוד או QR** | כל אחד מצטרף מהטלפון שלו ורואה שינויים תוך שניות |
-| 💡 **30 משימות מוכנות** | לחיצה אחת כדי להוסיף משימות לפי חדרים |
-| 📤 **שליחת הרשימה** | וואטסאפ, שיתוף או העתקה כטקסט |
-| ♿ **נגישות** | גודל טקסט, מצב כהה, ניגודיות גבוהה, גופן קריא, עצירת אנימציות ותמיכה מלאה במקלדת ובקורא מסך |
-| 📲 **התקנה כאפליקציה** | הוספה למסך הבית, עובד גם בלי אינטרנט ומסתנכרן כשחוזרים לרשת |
+- 🧹 **משימות חוזרות חכמות**: כל יום, בימים קבועים בשבוע, כל כמה ימים או כל חודש. משימה שבוצעה קופצת לבד לתאריך הבא
+- 🔄 **תורנות הוגנת**: משימה בתורנות עוברת לבן הבית הבא בכל פעם שמסמנים אותה
+- 🏆 **נקודות ואלופי השבוע**: משימה קלה, בינונית וקשה שוות 5, 10 ו-20 נקודות. הטבלה מתאפסת כל יום ראשון
+- 🛒 **רשימת קניות משותפת**: הפריטים מתמיינים לבד לפי מחלקות בסופר, עם כמויות, הערות והצעות של "קונים הרבה"
+- ⚡ **הוספה מהירה**: כמה פריטים בבת אחת עם פסיקים (חלב, ביצים, לחם) או בקול 🎤
+- 💌 **הצטרפות בקישור, קוד או QR**: בלי הרשמה ובלי סיסמאות
+- 💡 **30 משימות מוכנות** לפי חדרים, לחיצה אחת להוספה
+- 📤 **שליחת הרשימה** בוואטסאפ, דרך תפריט השיתוף או כטקסט מועתק
+- ↩️ **ביטול בכל מקום**: אפשר לבטל סימון, מחיקה וניקוי
+- 🎉 **כיף לשימוש**: קונפטי, אנימציות פסטליות ואימוג׳ים בכל מקום
+- ♿ **נגישות**: גודל טקסט, מצב כהה, ניגודיות גבוהה, גופן קריא, עצירת אנימציות, תמיכה במקלדת ובקורא מסך
+- 📲 **התקנה כאפליקציה (PWA)**: הוספה למסך הבית, עובד בלי אינטרנט ומסתנכרן כשחוזרים לרשת
+- 💾 **גיבוי**: הורדת כל נתוני הבית כקובץ JSON
 
 ## 🛠️ טכנולוגיות
 
-HTML, CSS ו-JavaScript נקיים (בלי בנייה) · [Supabase](https://supabase.com) (פונקציות Postgres ו-RLS) · GitHub Pages · Service Worker
+| חלק | טכנולוגיה |
+|---|---|
+| צד לקוח | HTML, CSS ו-JavaScript נקיים, בלי שלב בנייה |
+| מסד נתונים | [Supabase](https://supabase.com) (פונקציות Postgres ו-Row Level Security) |
+| סנכרון | תור שינויים מקומי ובדיקה כל 5 שניות, הכתיבה האחרונה קובעת |
+| עבודה בלי רשת | Service Worker ו-localStorage |
+| אחסון | [GitHub Pages](https://pages.github.com) |
+| גופן | [Rubik](https://fonts.google.com/specimen/Rubik) |
 
-## 🚀 הרצה עצמית
+## 🔒 כללי נתונים (נאכפים במסד הנתונים)
 
-1. פותחים פרויקט חינמי ב-[Supabase](https://supabase.com/dashboard) ומריצים את [`supabase.sql`](supabase.sql) ב-SQL Editor
-2. מעתיקים את ה-Project URL ואת ה-anon public key לקובץ [`config.js`](config.js)
-3. מפרסמים עם GitHub Pages
+| כלל | איפה |
+|---|---|
+| אי אפשר לקרוא או לכתוב לטבלאות ישירות | RLS פעיל בלי מדיניות, בקובץ [`supabase.sql`](supabase.sql) |
+| מגיעים לנתונים רק עם קוד הבית | הפונקציות `nestly_pull` ו-`nestly_push` |
+| קוד בית הוא 6 אותיות או ספרות | הפונקציה `nestly_create` |
+| עד 500 שורות בכל סנכרון ועד 20KB לשורה | הפונקציה `nestly_push` |
+| מחיקת בית מוחקת את כל הנתונים שלו | מפתח זר עם `on delete cascade` |
 
-בלי ערכים ב-`config.js` האפליקציה עובדת במצב מקומי על מכשיר אחד.
-
-## 🔒 פרטיות
-
-הטבלאות נעולות עם RLS. אפשר להגיע לנתונים רק דרך פונקציות שדורשות את קוד הבית.
-
-<div align="center">
-
-נבנה באהבה 💜 על ידי [נויה עדיבי](https://github.com/NoyaAdivi)
+## 📂 מבנה הפרויקט
 
 </div>
+
+```
+nestly/
+├── index.html            app shell, navigation, dialog
+├── styles.css            pastel design, animations, dark mode, accessibility modes
+├── app.js                all logic: chores, shopping, members, sync, onboarding
+├── config.js             Supabase URL and anon key
+├── supabase.sql          tables, security and functions (run once)
+├── sw.js                 offline Service Worker
+├── manifest.webmanifest  installable app settings
+├── icon.svg              logo
+├── icon-192.png          app icon
+├── icon-512.png          app icon
+└── nestly.png            screenshot
+```
+
+<div dir="rtl">
+
+## 💻 הרצה מקומית
+
+1. פותחים פרויקט חינמי ב-[Supabase](https://supabase.com/dashboard)
+2. נכנסים ל-SQL Editor, מדביקים את כל התוכן של [`supabase.sql`](supabase.sql) ולוחצים Run
+3. מעתיקים את ה-Project URL ואת ה-anon public key לקובץ [`config.js`](config.js)
+4. מריצים את התיקייה עם שרת סטטי, למשל `npx serve .`
+
+> ⚠️ משתמשים רק במפתח **anon**. אף פעם לא שמים בקובץ את המפתח `service_role` או את המפתח הסודי.
+> אם משאירים את `config.js` ריק, האפליקציה עובדת במצב מקומי על מכשיר אחד.
+
+## 🙏 קרדיטים
+
+אימוג׳ים מהגופן של המכשיר · הגופן [Rubik](https://fonts.google.com/specimen/Rubik) (SIL Open Font License) · קודי QR באמצעות [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT)
+
+<p align="center">נבנה באהבה 💜 על ידי <a href="https://github.com/NoyaAdivi">נויה עדיבי</a></p>
+
 </div>
