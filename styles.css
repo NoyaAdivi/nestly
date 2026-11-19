@@ -496,3 +496,15 @@ html[data-theme="dark"] .code-box,html[data-theme="dark"] .code-box h2{ color:#0
 .hero-badge::after{ content:""; position:absolute; inset:34px; border-radius:50%; background:var(--grad); filter:blur(26px); opacity:.55; z-index:-1; animation:halo 5s ease-in-out infinite }
 @keyframes halo{ 50%{ transform:scale(1.12); opacity:.8 } }
 .logo-wrap{ box-shadow:0 6px 16px -8px rgba(124,196,239,.7) }
+
+/* feature cards: soft pastel press instead of a gray flash */
+.feat{ -webkit-tap-highlight-color:transparent; outline:none; isolation:isolate }
+.feat .fx-ripple{ z-index:-1 }
+.feat .fx-ripple{ background:radial-gradient(circle,#ffffff 0%,rgba(124,196,239,.55) 45%,rgba(180,169,242,.35) 70%,transparent 72%)!important; opacity:.7!important; animation-duration:.7s!important }
+html[data-theme="dark"] .feat .fx-ripple{ background:radial-gradient(circle,rgba(143,208,255,.45),rgba(154,143,240,.25) 60%,transparent 72%)!important }
+.feat:active{ transform:translateY(-2px) scale(.97)!important; border-color:var(--sky)!important; box-shadow:0 0 0 6px color-mix(in srgb,var(--sky) 22%,transparent), var(--sh-sm)!important; transition-duration:.12s }
+.feat:active .fe{ animation:jelly .5s var(--ease) }
+.feat:focus-visible{ border-color:var(--sky); box-shadow:0 0 0 4px color-mix(in srgb,var(--sky) 35%,transparent) }
+.feat:nth-child(4n+2):active{ border-color:var(--mint-d)!important; box-shadow:0 0 0 6px color-mix(in srgb,var(--mint-d) 18%,transparent), var(--sh-sm)!important }
+.feat:nth-child(4n+3):active{ border-color:var(--lilac-d)!important; box-shadow:0 0 0 6px color-mix(in srgb,var(--lilac-d) 18%,transparent), var(--sh-sm)!important }
+.feat:nth-child(4n+4):active{ border-color:var(--blush-d)!important; box-shadow:0 0 0 6px color-mix(in srgb,var(--blush-d) 18%,transparent), var(--sh-sm)!important }
