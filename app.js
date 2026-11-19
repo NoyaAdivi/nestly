@@ -7,7 +7,9 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const clone = o => JSON.parse(JSON.stringify(o));
 const CFG = window.NESTLY_CONFIG || {};
 const CLOUD = !!(CFG.supabaseUrl && CFG.supabaseAnonKey);
-const KEY = 'nestly:v1', AKEY = 'nestly:a11y';
+const LIST = (new URLSearchParams(location.search).get('list') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+const LISTMODE = LIST.length === 12;
+const KEY = LISTMODE ? 'nestly:list:' + LIST : 'nestly:v1', AKEY = 'nestly:a11y';
 
 /* ---------- dates ---------- */
 const pad = n => String(n).padStart(2, '0');
@@ -130,6 +132,7 @@ let S = load();
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { } }
 S.records ||= {}; S.outbox ||= {};
+if (LISTMODE) { S.code = LIST; S.list = true; }
 const rec = id => { const r = S.records[id]; return r && !r.deleted ? r.data : null; };
 const rows = kind => Object.values(S.records).filter(r => r.kind === kind && !r.deleted).map(r => r.data);
 const members = () => rows('member').sort((a, b) => (a.created || 0) - (b.created || 0));
@@ -173,11 +176,14 @@ async function sync() {
     const out = Object.values(S.outbox);
     if (out.length) {
       const snap = out.map(r => JSON.stringify(r));
-      await rpc('nestly_push', { p_code: S.code, p_rows: out.map(({ id, kind, data, deleted }) => ({ id, kind, data, deleted })) });
+      const rws = out.filter(r => !LISTMODE || r.kind === 'shop' || r.kind === 'hist').map(({ id, kind, data, deleted }) => ({ id, kind, data, deleted }));
+      if (rws.length) await rpc(LISTMODE ? 'nestly_list_push' : 'nestly_push', LISTMODE ? { p_token: LIST, p_rows: rws } : { p_code: S.code, p_rows: rws });
       out.forEach((r, i) => { if (JSON.stringify(S.outbox[r.id]) === snap[i]) delete S.outbox[r.id]; });
     }
     const since = S.cursor ? new Date(new Date(S.cursor).getTime() - 15000).toISOString() : null;
-    const got = await rpc('nestly_pull', { p_code: S.code, p_since: since });
+    const got = await rpc(LISTMODE ? 'nestly_list_pull' : 'nestly_pull', LISTMODE ? { p_token: LIST, p_since: since } : { p_code: S.code, p_since: since });
+    if (LISTMODE && !S.cursor && !got.length) { listMissing(); syncing = false; return; }
+    if (LISTMODE && got.length && !S.meId && !S.guest && !S.welcomed) { S.welcomed = true; setTimeout(guestSheet, 300); }
     let changed = false;
     for (const r of got) {
       if (!S.cursor || new Date(r.updated_at) > new Date(S.cursor)) S.cursor = r.updated_at;
@@ -202,7 +208,7 @@ function scrollers(root) {
   $$('.chips.scroll, .shop-tools', root).forEach(el => {
     if (el.parentElement?.classList.contains('scroller')) return;
     const wrap = document.createElement('div'); wrap.className = 'scroller'; el.before(wrap); wrap.append(el);
-    const mk = (cls, label, dir) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sc-arrow ' + cls; b.setAttribute('aria-label', label); b.innerHTML = cls === 'sc-prev' ? '›' : '‹'; b.onclick = () => el.scrollBy({ left: dir * el.clientWidth * .7, behavior: calm() ? 'auto' : 'smooth' }); return b; };
+    const mk = (cls, label, dir) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sc-arrow ' + cls; b.setAttribute('aria-label', label); b.innerHTML = cls === 'sc-prev' ? '<span aria-hidden="true">›</span>' : '<span class="t">עוד</span><span aria-hidden="true">‹</span>'; b.onclick = () => el.scrollBy({ left: dir * el.clientWidth * .7, behavior: calm() ? 'auto' : 'smooth' }); return b; };
     wrap.append(mk('sc-prev', 'גלילה ימינה', 1), mk('sc-next', 'גלילה שמאלה', -1));
     const upd = () => { const max = el.scrollWidth - el.clientWidth, pos = Math.abs(el.scrollLeft); wrap.classList.toggle('can-prev', pos > 4); wrap.classList.toggle('can-next', max - pos > 4); };
     el.addEventListener('scroll', upd, { passive: true }); new ResizeObserver(upd).observe(el); upd();
@@ -344,6 +350,7 @@ const credit = '';
 function go(t, push = true) {
   if (!S.code) return;
   if (!VIEWS[t]) t = 'home';
+  if (LISTMODE) t = 'shop';
   tab = t; seen.clear();
   if (push && location.hash !== '#' + t) history.pushState(null, '', '#' + t);
   $$('.tab, .tnav').forEach(b => { const on = b.dataset.go === t; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
@@ -353,7 +360,7 @@ function go(t, push = true) {
   v.mount && v.mount();
   refresh();
   scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
-  $('#fab').hidden = t === 'shop';
+  $('#fab').hidden = t === 'shop' || LISTMODE;
   $('#fab').setAttribute('aria-label', { home: 'הוספה מהירה', tasks: 'משימה חדשה', family: 'הוספת בן או בת בית' }[t] || 'הוספה');
 }
 addEventListener('popstate', () => { const h = location.hash.slice(1); if (LEGAL[h]) return legalSheet(h); go(h || 'home', false); });
@@ -379,7 +386,7 @@ addEventListener('scroll', () => $('.topbar').classList.toggle('scrolled', scrol
 
 function refresh() {
   if (!S.code) return;
-  $('#home-name').textContent = homeName();
+  $('#home-name').textContent = LISTMODE ? `🛒 הרשימה של ${homeName()}` : homeName();
   const lateOrToday = activeTasks().filter(t => t.due && t.due <= today()).length;
   const shopN = rows('shop').filter(i => !i.bought).length;
   const bt = $('#b-tasks'), bs = $('#b-shop');
@@ -583,7 +590,7 @@ function itemRow(x, i) {
   return `<li class="item ${x.bought ? 'bought' : ''} ${pop(x.id + (x.bought ? 'b' : ''))}" style="--i:${i}" data-id="${x.id}">
     <button class="check" data-act="buy" data-id="${x.id}" aria-label="${x.bought ? 'החזרה לרשימה' : 'סימון שנקנה'}: ${esc(x.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     ${x.photo ? `<button class="i-photo" data-act="photo" data-id="${x.id}" aria-label="הגדלת התמונה של ${esc(x.name)}"><img src="${x.photo}" alt=""></button>` : ''}
-    <button class="i-main" data-act="edit-item" data-id="${x.id}" aria-label="עריכה: ${esc(x.name)}"><span><b>${esc(x.name)}</b>${x.qty > 1 ? `<span class="qty-badge">×${x.qty}</span>` : ''}${x.note ? `<small>${esc(x.note)}</small>` : ''}<small class="by-line">${by ? `נוסף על ידי ${esc(by.emoji)} ${esc(by.name)}` : 'נוסף לרשימה'}${x.at ? ` · ${ago(new Date(x.at).toISOString())}` : ''}</small></span></button>
+    <button class="i-main" data-act="edit-item" data-id="${x.id}" aria-label="עריכה: ${esc(x.name)}"><span><b>${esc(x.name)}</b>${x.qty > 1 ? `<span class="qty-badge">×${x.qty}</span>` : ''}${x.note ? `<small>${esc(x.note)}</small>` : ''}<small class="by-line">${by ? `נוסף על ידי ${esc(by.emoji)} ${esc(by.name)}` : x.byName ? `נוסף על ידי 🔗 ${esc(x.byName)}` : 'נוסף לרשימה'}${x.at ? ` · ${ago(new Date(x.at).toISOString())}` : ''}</small></span></button>
     ${by ? avatar(by, 'sm') : ''}</li>`;
 }
 function addItem(name, q = 1, quiet = false, forceCat = null) {
@@ -592,7 +599,7 @@ function addItem(name, q = 1, quiet = false, forceCat = null) {
   const hist = { ...(rec('hist') || {}) }; hist[name] = (hist[name] || 0) + 1; delete hist.id;
   const histRow = ['hist', { ...hist, id: 'hist' }];
   if (ex) { write([['shop', { ...ex, qty: (ex.qty || 1) + q }], histRow]); quiet || toast(`🔁 "${esc(name)}" כבר ברשימה, הכמות עודכנה`); flash(ex.id); return; }
-  const it = { id: uid(), name, qty: q, cat: forceCat || guessCat(name), by: S.meId, at: Date.now() };
+  const it = { id: uid(), name, qty: q, cat: forceCat || guessCat(name), by: S.meId, at: Date.now() }; if (LISTMODE && !member(S.meId)) it.byName = S.guest || 'אורח/ת';
   write([['shop', it], histRow]);
   quiet || toast(`${cat(it.cat).e} "${esc(name)}" נוסף לרשימה`);
 }
@@ -686,6 +693,50 @@ function roomEditSheet(id) {
     $('#f', b).onsubmit = e => { e.preventDefault(); const nm = e.target.n.value.trim(); if (!nm) { $('#err', b).textContent = 'צריך לתת שם 🙂'; return e.target.n.focus(); }
       const rid = id || 'r' + uid(); put('room', { ...(rows('room').find(x => x.id === rid) || {}), id: rid, n: nm, e: emo, hidden: false, order: id ? room(id).order : 100 + rooms().length });
       toast(`${esc(emo)} ${id ? 'החדר עודכן' : `"${esc(nm)}" נוסף לבית`}`); roomSheet(rid); };
+  });
+}
+/* ----- shopping list only links ----- */
+const listLink = t => `${location.origin}${location.pathname}?list=${t}`;
+async function listLinkSheet() {
+  if (!CLOUD) return sheet(`<h2 id="sheet-title">🔗 קישור לרשימה בלבד</h2><div class="note">🔒 כדי לשתף קישור צריך שהבית יהיה מחובר לענן (Supabase). במצב מקומי אפשר לשלוח את הרשימה כטקסט.</div><div class="actions"><button type="button" class="btn primary" data-act="share-list">↩️ חזרה</button></div>`);
+  let t = S.shareToken;
+  if (!t) {
+    sheet(`<h2 id="sheet-title">🔗 יוצרים קישור...</h2><div class="progress"><i style="--w:60%"></i></div>`);
+    try { for (let i = 0; i < 3 && !t; i++) { const c = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[x % 32]).join(''); if (await rpc('nestly_share_create', { p_code: S.code, p_token: c })) t = c; } }
+    catch (x) { console.warn(x); return sheet(`<h2 id="sheet-title">😕 צריך עדכון קטן ב־Supabase</h2><p>כדי שקישור לרשימה בלבד יעבוד, צריך להריץ פעם אחת את החלק החדש בסוף הקובץ <b>supabase.sql</b> (ב־Supabase ← SQL Editor ← Run).</p><div class="actions"><a class="btn primary" href="https://github.com/NoyaAdivi/nestly/blob/main/supabase.sql" target="_blank" rel="noopener">📄 לקובץ ב־GitHub</a><button type="button" class="btn ghost" data-act="share-list">↩️ חזרה</button></div>`); }
+    if (!t) return toast('😕 לא הצלחתי ליצור קישור, כדאי לנסות שוב');
+    S.shareToken = t; save();
+  }
+  const link = listLink(t), msg = `🛒 רשימת הקניות של "${homeName()}" ב־Nestly. אפשר להוסיף ולסמן מה נקנה:\n${link}`;
+  sheet(`<h2 id="sheet-title">🔗 הקישור לרשימה מוכן!</h2><p class="muted" style="margin-top:-6px">מי שפותח אותו רואה רק את רשימת הקניות ויכול להוסיף ולסמן. כל שינוי מגיע לכולם.</p>
+    <div class="link-box" dir="ltr">${esc(link)}</div>
+    <div class="actions" style="flex-direction:column"><a class="btn primary wide" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 שליחה בוואטסאפ</a>
+      <button type="button" class="btn soft wide" data-act="list-copy">📋 העתקת הקישור</button>
+      ${navigator.share ? '<button type="button" class="btn ghost wide" data-act="list-native">📲 שיתוף לאפליקציה אחרת</button>' : ''}
+      <button type="button" class="btn ghost danger wide" data-act="list-revoke">⛔ ביטול הקישור</button></div>`, b => {
+    b.onclick = async e => { const a = e.target.closest('[data-act]')?.dataset.act;
+      if (a === 'list-copy') copy(link, '📋 הקישור הועתק');
+      if (a === 'list-native') { try { await navigator.share({ text: msg }); } catch { } } };
+  });
+}
+async function listRevoke() {
+  try { await rpc('nestly_share_revoke', { p_code: S.code }); delete S.shareToken; save(); closeSheet(); toast('⛔ כל הקישורים לרשימה בוטלו. מי שקיבל אותם כבר לא יכול להיכנס'); }
+  catch { toast('😕 לא הצלחתי לבטל. כדאי לבדוק חיבור לאינטרנט'); }
+}
+function listMissing() {
+  sheet(`<h2 id="sheet-title">🔗 הקישור לא פעיל</h2><p>יכול להיות שהקישור בוטל או שהוקלד לא נכון. אפשר לבקש מבני הבית קישור חדש.</p><div class="actions"><a class="btn primary" href="${location.pathname}">🏡 לדף הבית של Nestly</a></div>`);
+}
+function listStart() {
+  document.body.classList.add('list-mode');
+  $('#home-name').textContent = 'רשימת קניות משותפת';
+  start();
+}
+function guestSheet() {
+  const ms = members();
+  sheet(`<h2 id="sheet-title">👋 ברוכים הבאים לרשימה!</h2><p class="muted" style="margin-top:-6px">זו רשימת הקניות של <b>${esc(homeName())}</b>. איך לרשום את מה שתוסיפו?</p>
+    ${ms.length ? `<div class="settings">${ms.map(m => `<button class="set-row" data-act="guest-pick" data-id="${m.id}">${avatar(m)}<span><b>${esc(m.name)}</b></span><span aria-hidden="true">←</span></button>`).join('')}</div><p class="muted" style="margin:10px 0 4px">או בשם אחר:</p>` : ''}
+    <form class="form" id="f"><label class="field"><span class="sr">השם שלך</span><input name="n" maxlength="24" placeholder="למשל: סבתא רותי" required></label><div class="actions"><button class="btn primary">✨ יאללה</button></div></form>`, b => {
+    $('#f', b).onsubmit = e => { e.preventDefault(); const n = e.target.n.value.trim(); if (!n) return e.target.n.focus(); S.guest = n; S.meId = null; save(); closeSheet(); toast(`👋 היי ${esc(n)}!`); };
   });
 }
 /* ----- legal and info pages (deep links: #accessibility #privacy #terms #contact) ----- */
@@ -858,9 +909,12 @@ function itemSheet(id) {
 }
 function shareList() {
   const act = rows('shop').filter(i => !i.bought);
-  if (!act.length) return toast('🧺 הרשימה ריקה כרגע');
+  if (!act.length && LISTMODE) return toast('🧺 הרשימה ריקה כרגע');
   const txt = `🛒 רשימת קניות: ${homeName()}\n` + CAT_ORDER.map(cat).map(c => { const g = act.filter(x => x.cat === c.id); return g.length ? `\n${c.e} ${c.n}\n${g.map(x => `• ${x.name}${x.qty > 1 ? ` ×${x.qty}` : ''}${x.note ? ` (${x.note})` : ''}`).join('\n')}` : ''; }).join('') + (CLOUD ? `\n\n📲 להוספה לרשימה: ${joinLink()}` : '');
-  sheet(`<h2 id="sheet-title">📤 שליחת הרשימה</h2><p class="muted" style="margin-top:-6px">${act.length} פריטים, מסודרים לפי מחלקות בסופר.</p>
+  sheet(`<h2 id="sheet-title">📤 שיתוף רשימת הקניות</h2>
+    ${LISTMODE ? '' : `<div class="share-box"><b>🔗 קישור לרשימת הקניות בלבד</b><small>מי שמקבל אותו רואה ויכול להוסיף ולסמן רק ברשימת הקניות. בלי המשימות, בלי ההגדרות ובלי קוד הבית. מתאים לסבתא, לבייביסיטר או לשותפים.</small>
+      <div class="actions"><button type="button" class="btn primary" data-act="list-link">🔗 יצירת קישור לרשימה</button>${S.shareToken ? '<button type="button" class="btn ghost danger" data-act="list-revoke">⛔ ביטול כל הקישורים</button>' : ''}</div></div>`}
+    <h3 class="group-t" style="margin:16px 0 4px">📝 שליחה כטקסט</h3><p class="muted" style="margin:0 0 6px">${act.length} פריטים, מסודרים לפי מחלקות בסופר.</p>
     <div class="actions" style="flex-direction:column">
       <a class="btn primary wide" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">💬 שליחה בוואטסאפ</a>
       ${navigator.share ? '<button type="button" class="btn soft wide" data-act="native-share">📲 שיתוף לאפליקציה אחרת</button>' : ''}
@@ -1093,6 +1147,9 @@ document.addEventListener('click', e => {
     case 'share-list': shareList(); break;
     case 'photo': photoSheet(id); break;
     case 'import': importSheet(a.dataset.m); break;
+    case 'list-link': listLinkSheet(); break;
+    case 'list-revoke': listRevoke(); break;
+    case 'guest-pick': S.meId = id; delete S.guest; save(); closeSheet(); toast(`👋 היי ${esc(member(id)?.name || '')}!`); break;
     case 'rooms': roomsSheet(); break;
     case 'room-open': roomSheet(id); break;
     case 'room-filter': closeSheet(); tRoom = id; tFilter = 'all'; seen.clear(); refresh(); break;
@@ -1141,7 +1198,8 @@ function start() {
 window.addEventListener('load', () => tab === 'family' && drawQR());
 
 const joinParam = new URLSearchParams(location.search).get('join');
-if (S.code && (!joinParam || joinParam.toUpperCase() === S.code)) { if (joinParam) history.replaceState(null, '', location.pathname + '#home'); start(); }
+if (LISTMODE) listStart();
+else if (S.code && (!joinParam || joinParam.toUpperCase() === S.code)) { if (joinParam) history.replaceState(null, '', location.pathname + '#home'); start(); }
 else if (S.code && joinParam) { start(); sheet(`<h2 id="sheet-title">🏡 קישור לבית אחר</h2><p>כבר יש לך בית במכשיר הזה (${esc(homeName())}). כדי להצטרף לבית אחר צריך קודם לצאת מהבית הנוכחי בהגדרות.</p><div class="actions"><button class="btn primary" data-act="close">הבנתי</button></div>`); history.replaceState(null, '', location.pathname + '#home'); }
 else { onboarding(joinParam); setSync('local'); const h = location.hash.slice(1); if (LEGAL[h]) setTimeout(() => legalSheet(h), 300); }
 

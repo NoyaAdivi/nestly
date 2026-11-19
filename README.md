@@ -66,6 +66,7 @@
         <li><b>Who added what</b>, a <b>photo of the product</b> and a chosen aisle</li>
         <li><b>Import a whole list</b> from a photo (even handwriting), a PDF or Word file, or pasted text</li>
         <li><b>Recommended list</b> by aisle and <b>"buy again"</b> suggestions</li>
+        <li><b>Share only the shopping list</b> with a link: no chores, no household code, and you can cancel it any time</li>
         <li><b>Send the list</b> on WhatsApp, the share menu or as text</li>
       </ul>
     </td>
@@ -166,6 +167,7 @@ flowchart LR
 | Household codes must be 6 letters or digits | `nestly_create` function |
 | Up to 500 rows per sync and 20 KB per row | `nestly_push` function |
 | Deleting a household removes all its data | `on delete cascade` foreign key |
+| A shopping list link reads and writes only the list | `nestly_list_pull` and `nestly_list_push` with a separate 12 character token |
 
 > [!NOTE]
 > The site only holds the public **anon** key. All the real rules live inside Postgres, so even a curious visitor with the key can't list other households.

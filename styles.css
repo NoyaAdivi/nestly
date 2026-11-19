@@ -676,3 +676,18 @@ html[data-theme="dark"] .tnav.on{ color:#0d1830; box-shadow:none }
 .rt-list .e{ font-size:1.3rem } .rt-list .tx{ flex:1; display:flex; flex-direction:column; min-width:0 } .rt-list small{ color:var(--muted); font-size:.78rem }
 .ib{ width:36px; height:36px; flex:none; border-radius:11px; display:grid; place-items:center; background:var(--solid); border:1.5px solid var(--line); transition:transform .2s var(--ease), border-color .2s }
 .ib:hover{ transform:translateY(-2px); border-color:var(--sky) }
+
+/* scroll hint: a clear "more" pill */
+.sc-next{ width:auto; padding:0 10px 0 8px; gap:4px; border-radius:99px; grid-auto-flow:column; font-size:1.1rem; background:var(--grad-2); background-size:300% 100%; border-color:transparent; color:var(--navy); box-shadow:0 4px 12px -4px rgba(27,45,92,.35) }
+.sc-next .t{ font-size:.78rem; font-weight:800 }
+html[data-theme="dark"] .sc-next{ color:#0d1830 }
+.scroller.can-next{ padding-bottom:2px }
+@media (min-width:880px){ .chips.scroll{ flex-wrap:wrap!important; overflow:visible!important } .shop-tools{ flex-wrap:wrap; overflow:visible } }
+
+/* share list only */
+.share-box{ display:flex; flex-direction:column; gap:6px; padding:14px; border-radius:18px; background:linear-gradient(120deg,var(--sky-l),var(--mint)); border:2px solid var(--line) }
+.share-box small{ color:var(--muted); line-height:1.45 }
+.share-box .actions{ margin-top:6px }
+.link-box{ padding:12px 14px; border-radius:14px; background:var(--bg2); border:2px dashed var(--line-2); font-family:ui-monospace,Consolas,monospace; font-size:.86rem; word-break:break-all; margin:8px 0 12px; user-select:all }
+body.list-mode .tabbar,body.list-mode .topnav,body.list-mode .fab{ display:none!important }
+body.list-mode .site-foot{ padding-bottom:40px }
