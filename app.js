@@ -71,6 +71,21 @@ const CATS = [
 const CAT_ORDER = ['produce', 'dairy', 'bakery', 'meat', 'pantry', 'frozen', 'drinks', 'snacks', 'cleaning', 'hygiene', 'pets', 'other'];
 const cat = id => CATS.find(c => c.id === id) || CATS[CATS.length - 1];
 const guessCat = name => (CATS.find(c => c.k.some(k => name.includes(k))) || CATS[CATS.length - 1]).id;
+/* recommended shopping list, by aisle: [emoji, name] */
+const RECS = {
+  produce: [['🍅', 'עגבניות'], ['🥒', 'מלפפונים'], ['🧅', 'בצל'], ['🧄', 'שום'], ['🫑', 'פלפלים'], ['🥕', 'גזר'], ['🥬', 'חסה'], ['🥔', 'תפוחי אדמה'], ['🍋', 'לימונים'], ['🥑', 'אבוקדו'], ['🍌', 'בננות'], ['🍎', 'תפוחים'], ['🌿', 'פטרוזיליה'], ['🍇', 'ענבים']],
+  dairy: [['🥛', 'חלב'], ['🥚', 'ביצים'], ['🧀', 'גבינה צהובה'], ['🥣', 'קוטג׳'], ['🫙', 'גבינה לבנה'], ['🍶', 'יוגורט'], ['🧈', 'חמאה'], ['🥛', 'שמנת מתוקה'], ['🍮', 'מעדנים'], ['🫓', 'לבנה']],
+  bakery: [['🍞', 'לחם'], ['🫓', 'פיתות'], ['🥖', 'באגט'], ['🍞', 'חלה'], ['🥯', 'לחמניות'], ['🌯', 'טורטיות']],
+  meat: [['🍗', 'חזה עוף'], ['🍗', 'שניצלים'], ['🥩', 'בשר טחון'], ['🍖', 'פרגיות'], ['🐟', 'סלמון'], ['🌭', 'נקניקיות']],
+  pantry: [['🍚', 'אורז'], ['🍝', 'פסטה'], ['🫒', 'שמן זית'], ['🧂', 'מלח'], ['🍬', 'סוכר'], ['🌾', 'קמח'], ['🥫', 'טונה'], ['🥫', 'רסק עגבניות'], ['☕', 'קפה'], ['🫖', 'תה'], ['🥣', 'קורנפלקס'], ['🫘', 'טחינה']],
+  frozen: [['🫛', 'אפונה קפואה'], ['🥟', 'בורקס קפוא'], ['🍕', 'פיצה קפואה'], ['🍦', 'גלידה'], ['🍟', 'צ׳יפס קפוא']],
+  drinks: [['💧', 'מים מינרליים'], ['🧃', 'מיץ תפוזים'], ['🫧', 'סודה'], ['🥤', 'תרכיז'], ['🍷', 'יין']],
+  snacks: [['🥜', 'במבה'], ['🥨', 'ביסלי'], ['🍫', 'שוקולד'], ['🍪', 'עוגיות'], ['🍿', 'פופקורן'], ['🧇', 'וופלים']],
+  cleaning: [['🧴', 'סבון כלים'], ['🧽', 'ספוגים'], ['🗑️', 'שקיות זבל'], ['👕', 'אבקת כביסה'], ['🌸', 'מרכך כביסה'], ['🫧', 'נוזל רצפות'], ['🧻', 'מגבות נייר'], ['🧪', 'אקונומיקה']],
+  hygiene: [['🧻', 'נייר טואלט'], ['🤧', 'טישו'], ['🧴', 'שמפו'], ['🧼', 'סבון ידיים'], ['🪥', 'משחת שיניים'], ['🌬️', 'דאודורנט'], ['👶', 'מגבונים']],
+  pets: [['🐶', 'אוכל לכלב'], ['🐱', 'אוכל לחתול'], ['🪣', 'חול לחתול']]
+};
+const REC_ORDER = ['produce', 'dairy', 'bakery', 'meat', 'pantry', 'frozen', 'drinks', 'snacks', 'cleaning', 'hygiene', 'pets'];
 
 const R = (type, extra = {}) => ({ type, ...extra });
 const TEMPLATES = [
@@ -461,7 +476,7 @@ function tplTask(i) { const [r, title, emoji, repeat, effort] = TEMPLATES[i]; re
 let qty = 1, rec2 = null;
 function shopView() { }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-shopView.shell = () => `<div class="page-h"><h1>🛒 רשימת קניות</h1><button class="btn soft" data-act="share-list" style="min-height:42px;padding:0 14px">📤 שליחה</button></div>
+shopView.shell = () => `<div class="page-h"><h1>🛒 רשימת קניות</h1><div class="page-btns"><button class="btn soft rec-btn" data-act="recs" style="min-height:42px;padding:0 14px">💡 מומלצים</button><button class="btn soft" data-act="share-list" aria-label="שליחת הרשימה" style="min-height:42px;padding:0 14px">📤<span class="bt"> שליחה</span></button></div></div>
   <form class="add-bar" id="add-item" autocomplete="off">
     <label class="sr" for="item-in">מה צריך לקנות?</label>
     <input id="item-in" placeholder="מה צריך לקנות? 🥑" maxlength="80" enterkeyhint="done">
@@ -488,7 +503,7 @@ shopView.body = () => {
   const groups = CAT_ORDER.map(cat).map(c => { const g = act.filter(x => x.cat === c.id).sort((a, b) => a.name.localeCompare(b.name, 'he')); return g.length ? `<h3 class="cat-t"><span class="e" aria-hidden="true">${c.e}</span>${c.n} <span class="muted" style="font-weight:500">(${g.length})</span></h3><ul class="list">${g.map(x => itemRow(x, i++)).join('')}</ul>` : ''; }).join('');
   return `${sugg.length ? `<div class="sugg"><small class="muted">⚡ קונים הרבה:</small>${chips('sg', sugg.map(([n]) => [n, `➕ ${esc(n)}`]), null, false, 'scroll')}</div>` : ''}
   ${items.length ? `<div class="progress" role="progressbar" aria-label="התקדמות הקנייה" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="--w:${pct}%"></i></div><small class="muted" style="margin-inline-start:6px">${bought.length} מתוך ${items.length} בעגלה</small>` : ''}
-  ${act.length ? groups : `<div class="card empty"><span class="big">${bought.length ? '🎉' : '🧺'}</span>${bought.length ? 'הכל בעגלה! אפשר לנקות את מה שנקנה.' : 'הרשימה ריקה. כל בני הבית יכולים להוסיף כאן מה שצריך, וזה מתעדכן אצל כולם.'}<br><small>טיפ: אפשר להוסיף כמה פריטים בבת אחת עם פסיקים, למשל: חלב, ביצים, לחם</small></div>`}
+  ${act.length ? groups : `<div class="card empty"><span class="big">${bought.length ? '🎉' : '🧺'}</span>${bought.length ? 'הכל בעגלה! אפשר לנקות את מה שנקנה.' : 'הרשימה ריקה. כל בני הבית יכולים להוסיף כאן מה שצריך, וזה מתעדכן אצל כולם.'}<br><small>טיפ: אפשר להוסיף כמה פריטים בבת אחת עם פסיקים, למשל: חלב, ביצים, לחם</small>${bought.length ? '' : '<br><button type="button" class="btn soft rec-btn" data-act="recs" style="margin-top:12px">💡 לרשימת הקניות המומלצת</button>'}</div>`}
   ${bought.length ? `<div class="card-h" style="margin-top:22px"><h3 class="group-t" style="margin:0">✅ בעגלה (${bought.length})</h3><button class="link-btn" data-act="clear-bought">🧹 ניקוי מה שנקנה</button></div><ul class="list">${bought.map(x => itemRow(x, i++)).join('')}</ul>` : ''}
   ${credit}`;
 };
@@ -508,6 +523,27 @@ function addItem(name, q = 1, quiet = false) {
   const it = { id: uid(), name, qty: q, cat: guessCat(name), by: S.meId, at: Date.now() };
   write([['shop', it], histRow]);
   quiet || toast(`${cat(it.cat).e} "${esc(name)}" נוסף לרשימה`);
+}
+let recCat = 'produce';
+function recsSheet(c = recCat) {
+  recCat = c;
+  const on = new Set(rows('shop').filter(i => !i.bought).map(i => i.name)), list = RECS[c], cc = cat(c);
+  const left = list.filter(([, n]) => !on.has(n)).length;
+  const card = $('.sheet-card'), top = dlg.open && card ? card.scrollTop : 0, focusKey = document.activeElement?.dataset?.key;
+  sheet(`<h2 id="sheet-title">💡 רשימת קניות מומלצת</h2><p class="muted" style="margin-top:-8px">בוחרים מחלקה ולוחצים על מה שצריך. לחיצה נוספת מורידה מהרשימה.</p>
+    <div class="chips scroll rec-cats" role="tablist" aria-label="מחלקות">${REC_ORDER.map(id => { const x = cat(id), n = RECS[id].filter(([, m]) => on.has(m)).length; return `<button type="button" class="chip" role="tab" data-act="rec-cat" data-c="${id}" data-key="c-${id}" aria-pressed="${id === c}" aria-selected="${id === c}">${x.e} ${x.n}${n ? ` <span class="cnt">${n}</span>` : ''}</button>`; }).join('')}</div>
+    <div class="rec-head"><h3>${cc.e} ${cc.n}</h3>${left ? `<button type="button" class="link-btn" data-act="rec-all" data-key="all">➕ להוסיף הכל (${left})</button>` : '<span class="muted">✓ הכל ברשימה</span>'}</div>
+    <div class="rec-grid" role="group" aria-label="${cc.n}">${list.map(([e, n], i) => { const a = on.has(n); return `<button type="button" class="rec ${a ? 'added' : ''}" style="--i:${i}" data-act="rec-add" data-n="${esc(n)}" data-key="r-${i}" aria-pressed="${a}"><span class="e" aria-hidden="true">${e}</span><span class="n">${esc(n)}</span><b aria-hidden="true">${a ? '✓' : '+'}</b></button>`; }).join('')}</div>
+    <div class="actions" style="margin-top:16px"><button type="button" class="btn primary" data-act="close">✅ סיימתי</button></div>`);
+  const nc = $('.sheet-card'); if (nc) nc.scrollTop = top;
+  if (focusKey) $(`#sheet-body [data-key="${focusKey}"]`)?.focus({ preventScroll: true });
+  $('.rec-cats [aria-pressed="true"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
+}
+function recToggle(name) {
+  const ex = rows('shop').find(i => !i.bought && i.name === name);
+  if (ex) { const x = clone(ex); del(ex.id); toast(`↩️ "${esc(name)}" הוסר מהרשימה`, { undo: () => { put('shop', x); recsSheet(); } }); }
+  else { addItem(name, 1, true); const it = rows('shop').find(i => !i.bought && i.name === name); if (it && it.cat !== recCat) put('shop', { ...it, cat: recCat }); toast(`${cat(recCat).e} "${esc(name)}" נוסף לרשימה`); }
+  recsSheet();
 }
 const flash = id => setTimeout(() => $(`.item[data-id="${id}"]`)?.classList.add('flash'), 30);
 function itemSheet(id) {
@@ -756,6 +792,10 @@ document.addEventListener('click', e => {
     case 'del-item': { const x = clone(rec(id)); del(id); closeSheet(); toast(`🗑️ "${esc(x.name)}" הוסר`, { undo: () => put('shop', x) }); break; }
     case 'clear-bought': { const b = rows('shop').filter(i => i.bought).map(clone); write(b.map(i => ['del', i.id])); toast(`🧹 ${b.length} פריטים נוקו`, { undo: () => write(b.map(i => ['shop', i])) }); break; }
     case 'share-list': shareList(); break;
+    case 'recs': recsSheet(); break;
+    case 'rec-cat': recsSheet(a.dataset.c); break;
+    case 'rec-add': recToggle(a.dataset.n); break;
+    case 'rec-all': { const on = new Set(rows('shop').filter(i => !i.bought).map(i => i.name)), add = RECS[recCat].filter(([, n]) => !on.has(n)).map(([, n]) => ({ id: uid(), name: n, qty: 1, cat: recCat, by: S.meId, at: Date.now() })); if (!add.length) break; write(add.map(i => ['shop', i])); toast(`${cat(recCat).e} ${add.length} פריטים נוספו לרשימה`, { undo: () => { write(add.map(i => ['del', i.id])); recsSheet(); } }); recsSheet(); break; }
     case 'copy-code': copy(fmtCode(S.code), '📋 הקוד הועתק'); break;
     case 'copy-link': copy(joinLink(), '🔗 הקישור הועתק. אפשר להדביק בוואטסאפ'); break;
     case 'rename': textSheet('✏️ שם הבית', 'איך קוראים לבית?', homeName(), v => { put('meta', { id: 'meta', name: v }); toast('✅ שם הבית עודכן'); }); break;
