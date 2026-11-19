@@ -231,7 +231,7 @@ const calm = () => document.documentElement.classList.contains('nk-still') || ma
 let parts = [], raf = 0;
 function confetti(x = innerWidth / 2, y = innerHeight / 2, n = 70) {
   if (calm()) return;
-  const cols = ['#1b2d5c', '#7cc4ef', '#3a9ad9', '#3d8a7a', '#a6dcf7', '#f7c47e', '#dcf3ea'];
+  const cols = ['#7cc4ef', '#a8dcf8', '#8fdcc0', '#c9c2f7', '#f6b8c6', '#6fa8e8', '#1b2d5c'];
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 7;
     parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5, r: 4 + Math.random() * 5, c: cols[i % cols.length], rot: Math.random() * 6, vr: (Math.random() - .5) * .4, life: 90 + Math.random() * 40, sq: Math.random() > .5 });
@@ -624,7 +624,7 @@ function onboarding(joinCode) {
     <section class="onb-hero">
       <div class="hero-badge" aria-hidden="true">
         <img src="logo.svg" alt="" class="hero-logo" width="132" height="132">
-        <span class="orbit"><i>🧺</i><i>🧽</i><i>🛒</i><i>⭐</i></span>
+        <span class="orbit"><i>🧺</i><i>🫧</i><i>🛒</i><i>🩵</i></span>
       </div>
       <span class="eyebrow">✨ אפליקציית הבית המשותף</span>
       <h1>הבית שלכם, <span class="grad-txt">מסודר ושמח</span></h1>

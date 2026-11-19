@@ -1,22 +1,24 @@
 /* =========================================================
-   Nestly · design system built from the logo
-   navy lines, sky blue, soft mint and sand, clean white cards
+   Nestly · pastel design system built from the logo
+   navy lines, sky blue, mint, lilac and blush. No yellow.
    ========================================================= */
 :root{
   --navy:#1b2d5c; --navy-2:#2b4f9a; --navy-3:#0f1d40;
-  --sky:#7cc4ef; --sky-d:#3a9ad9; --sky-m:#cfe8fa; --sky-l:#eaf5fd;
-  --teal:#3d8a7a; --mint:#dcf3ea; --mint-d:#2f8f6f;
-  --sand:#fdf0dc; --sand-d:#d98c3a; --coral:#ef6a4c; --coral-l:#fde6e0;
-  --bg:#f5faff; --bg2:#eef6fd; --card:#ffffff; --solid:#ffffff;
-  --ink:#1b2d5c; --muted:#6a7b9c; --line:#dce8f5; --line-2:#c9daee;
+  --sky:#7cc4ef; --sky-d:#3a8fd0; --sky-m:#d4ebfb; --sky-l:#ecf6fe;
+  --teal:#3d8a7a; --mint:#dcf5ec; --mint-d:#2f8f6f;
+  --sand:#efebfd; --sand-d:#6f63d0; --coral:#e0607a; --coral-l:#fde8ec;
+  --lilac:#efebfd; --lilac-d:#6f63d0; --blush:#fde8ec; --blush-d:#c9566e;
+  --bg:#f5f9ff; --bg2:#eef5fd; --card:rgba(255,255,255,.86); --solid:#ffffff;
+  --ink:#1b2d5c; --muted:#66779a; --line:#dfe9f6; --line-2:#cbdcef;
   /* names the app code already uses */
-  --lav:var(--sky-l); --lav-d:var(--sky-d); --peach:var(--sand); --peach-d:var(--sand-d);
-  --pink:var(--coral-l); --pink-d:var(--coral); --butter:#fff4d6; --butter-d:#b98a00;
-  --grad:linear-gradient(135deg,#7cc4ef,#a6dcf7);
+  --lav:var(--lilac); --lav-d:var(--lilac-d); --peach:var(--blush); --peach-d:var(--blush-d);
+  --pink:var(--blush); --pink-d:var(--blush-d); --butter:var(--mint); --butter-d:var(--mint-d);
+  --grad:linear-gradient(120deg,#a9dbf8 0%,#b8ead9 50%,#d3cdfa 100%);
+  --grad-2:linear-gradient(120deg,#7cc4ef,#8fdcc0,#b4a9f2,#7cc4ef);
+  --press:0 4px 0 #9cc0e0;
   --r:22px; --r-sm:14px;
-  --sh:0 2px 0 rgba(27,45,92,.05), 0 18px 40px -26px rgba(27,45,92,.45);
-  --sh-sm:0 2px 0 rgba(27,45,92,.05), 0 10px 22px -16px rgba(27,45,92,.4);
-  --press:0 4px 0 var(--navy-3);
+  --sh:0 2px 0 rgba(27,45,92,.04), 0 18px 40px -26px rgba(27,45,92,.38);
+  --sh-sm:0 2px 0 rgba(27,45,92,.04), 0 10px 22px -16px rgba(27,45,92,.32);
   --ease:cubic-bezier(.2,.9,.3,1.25);
   --font:"Rubik",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
   --head:"Fredoka","Rubik",system-ui,sans-serif;
@@ -25,15 +27,16 @@ html[data-theme="dark"]{
   color-scheme:dark;
   --navy:#eaf2ff; --navy-2:#a9c8ff; --navy-3:#06102a;
   --sky:#8fd0ff; --sky-d:#8fd0ff; --sky-m:#24406e; --sky-l:#1a2d52;
-  --teal:#6fd7bf; --mint:#173d3a; --mint-d:#6fe0b4;
-  --sand:#3f3220; --sand-d:#ffc27a; --coral:#ff8f78; --coral-l:#4a2730;
-  --bg:#0d1830; --bg2:#111f3c; --card:#15264a; --solid:#15264a;
+  --teal:#6fd7bf; --mint:#163c3a; --mint-d:#7fe3be;
+  --sand:#2a2550; --sand-d:#bdb4ff; --coral:#ff8fa3; --coral-l:#432536;
+  --lilac:#2a2550; --lilac-d:#bdb4ff; --blush:#432536; --blush-d:#ffa6b7;
+  --bg:#0d1830; --bg2:#111f3c; --card:rgba(21,38,74,.88); --solid:#15264a;
   --ink:#eaf2ff; --muted:#9fb2d4; --line:#25395f; --line-2:#2f4672;
-  --butter:#4a4020; --butter-d:#ffd76a;
-  --grad:linear-gradient(135deg,#3a7fc0,#5fb3e8);
+  --grad:linear-gradient(120deg,#5fb3e8 0%,#5fcfae 50%,#9a8ff0 100%);
+  --grad-2:linear-gradient(120deg,#5fb3e8,#5fcfae,#9a8ff0,#5fb3e8);
+  --press:0 4px 0 #06102a;
   --sh:0 2px 0 rgba(0,0,0,.2), 0 18px 40px -24px rgba(0,0,0,.8);
   --sh-sm:0 2px 0 rgba(0,0,0,.2), 0 10px 22px -16px rgba(0,0,0,.8);
-  --press:0 4px 0 #050d22;
 }
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important } }
 
@@ -59,8 +62,8 @@ h1{ font-size:clamp(1.65rem,4.6vw,2.15rem) } h2{ font-size:1.18rem }
 .blobs span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.55; animation:drift 24s ease-in-out infinite alternate }
 .blobs span:nth-child(1){ width:44vmax; height:44vmax; background:#cfe8fa; top:-16vmax; right:-14vmax }
 .blobs span:nth-child(2){ width:40vmax; height:40vmax; background:#dcf3ea; bottom:-18vmax; left:-14vmax; animation-delay:-7s }
-.blobs span:nth-child(3){ width:26vmax; height:26vmax; background:#e3effd; top:38%; left:50%; animation-delay:-12s }
-.blobs span:nth-child(4){ width:20vmax; height:20vmax; background:#fdf0dc; top:64%; right:62%; animation-delay:-16s; opacity:.4 }
+.blobs span:nth-child(3){ width:26vmax; height:26vmax; background:#e2ddfb; top:38%; left:50%; animation-delay:-12s }
+.blobs span:nth-child(4){ width:20vmax; height:20vmax; background:#f9dbe3; top:64%; right:62%; animation-delay:-16s; opacity:.4 }
 html[data-theme="dark"] .blobs span{ opacity:.14 }
 @keyframes drift{ to{ transform:translate(6vmax,5vmax) scale(1.12) } }
 .spark{ position:absolute; color:var(--sky); font-size:16px; opacity:.7; animation:twinkle 3.6s ease-in-out infinite }
@@ -424,3 +427,72 @@ html[data-theme="dark"] .nk-panel{ background:#15264a!important; border-color:#2
 html[data-theme="dark"] .nk-panel h2{ color:#eaf2ff!important }
 html[data-theme="dark"] .nk-b,html[data-theme="dark"] .nk-reset,html[data-theme="dark"] .nk-x{ background:#1a2d52!important; border-color:#2f4672!important; color:#eaf2ff!important }
 html[data-theme="dark"] .nk-b[aria-pressed=true]{ background:#8fd0ff!important; color:#0d1830!important; border-color:#8fd0ff!important }
+
+/* =========================================================
+   Pastel refresh · soft gradients, glass cards, more motion
+   ========================================================= */
+body{ background:linear-gradient(180deg,var(--bg),var(--bg2)) fixed }
+.bg::after{ content:""; position:absolute; inset:-20%; background:conic-gradient(from 0deg at 50% 50%,rgba(124,196,239,.16),rgba(143,220,192,.14),rgba(180,169,242,.14),rgba(246,184,198,.12),rgba(124,196,239,.16)); filter:blur(60px); animation:aurora 30s linear infinite }
+html[data-theme="dark"] .bg::after{ opacity:.35 }
+@keyframes aurora{ to{ transform:rotate(360deg) } }
+.blobs span{ opacity:.7 }
+.blobs span:nth-child(1){ background:#cde8fb } .blobs span:nth-child(2){ background:#d2f3e6 }
+.blobs span:nth-child(3){ background:#e2ddfb } .blobs span:nth-child(4){ background:#f9dbe3; opacity:.55 }
+
+.card,.stat,.feat,.task,.topbar,.tabbar,.foot-card{ backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2) }
+.card:hover{ border-color:var(--sky-m) }
+
+/* gradient text accents */
+.brand-txt b::after{ background:var(--grad-2)!important; background-size:300% 100%!important; animation:swoosh .8s var(--ease), flow 6s linear infinite!important }
+h1 u,h1 em,.hero h1 span{ background:var(--grad-2); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:flow 6s linear infinite }
+@keyframes flow{ to{ background-position:300% 0 } }
+
+/* buttons: soft pastel gradient with navy text */
+.btn.primary,.fab,.tab-pill,.chip[aria-pressed="true"],.step > span{ background:var(--grad-2); background-size:300% 100%; color:var(--navy); border-color:transparent; box-shadow:var(--press); animation:flow 8s linear infinite }
+html[data-theme="dark"] .btn.primary,html[data-theme="dark"] .fab,html[data-theme="dark"] .chip[aria-pressed="true"],html[data-theme="dark"] .step > span{ color:#0d1830 }
+.btn.primary:hover{ box-shadow:0 6px 0 #9cc0e0, 0 14px 30px -10px rgba(111,168,232,.6) }
+.btn.primary:active{ box-shadow:0 1px 0 #9cc0e0 }
+html[data-theme="dark"] .btn.primary:hover,html[data-theme="dark"] .btn.primary:active{ box-shadow:0 4px 0 #06102a }
+.btn.primary::after{ background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.7) 50%,transparent 65%) }
+.btn.soft{ background:var(--lilac); border-color:color-mix(in srgb,var(--lilac-d) 25%,transparent); box-shadow:0 3px 0 color-mix(in srgb,var(--lilac-d) 25%,transparent) }
+.tab.on,html[data-theme="dark"] .tab.on{ color:var(--navy) }
+html[data-theme="dark"] .tab.on{ color:#0d1830 }
+.fab{ color:var(--navy); animation:flow 8s linear infinite, fabGlow 2.8s ease-in-out infinite }
+@keyframes fabGlow{ 50%{ box-shadow:var(--press), 0 0 0 10px rgba(124,196,239,.18) } }
+
+/* stat cards in four pastel tones */
+.stat.ring-card{ background:linear-gradient(165deg,var(--sky-m),var(--card) 75%) }
+.stat.s-shop{ background:linear-gradient(165deg,var(--mint),var(--card) 80%) }
+.stat.s-pts{ background:linear-gradient(165deg,var(--lilac),var(--card) 80%) }
+.ring .fg{ stroke:#6fb3ea } html[data-theme="dark"] .ring .fg{ stroke:var(--sky) }
+.stat .n{ animation:countPop .6s var(--ease) both .2s }
+@keyframes countPop{ from{ transform:scale(.6); opacity:0 } }
+
+/* features and chips */
+.feat:nth-child(4n+1){ background:linear-gradient(170deg,var(--sky-l),var(--card)) }
+.feat:nth-child(4n+2){ background:linear-gradient(170deg,var(--mint),var(--card)) }
+.feat:nth-child(4n+3){ background:linear-gradient(170deg,var(--lilac),var(--card)) }
+.feat:nth-child(4n+4){ background:linear-gradient(170deg,var(--blush),var(--card)) }
+.chip:hover{ transform:translateY(-2px); border-color:var(--sky) }
+
+/* task cards: staggered entrance and a soft hover lift */
+.task{ animation:taskIn .5s var(--ease) both; animation-delay:calc(var(--i,0) * 50ms) }
+.task:nth-child(2){ --i:1 } .task:nth-child(3){ --i:2 } .task:nth-child(4){ --i:3 } .task:nth-child(5){ --i:4 } .task:nth-child(6){ --i:5 }
+@keyframes taskIn{ from{ opacity:0; transform:translateY(14px) scale(.97) } }
+.task:hover{ transform:translateY(-2px); box-shadow:var(--sh) }
+.check{ border-color:#8fbde6 } .check:hover{ background:var(--mint); border-color:var(--mint-d); transform:scale(1.08) }
+
+/* code box, toast and badges in pastel */
+.code-box{ background:var(--grad-2); background-size:300% 100%; animation:flow 10s linear infinite; color:var(--navy); border-color:transparent }
+.code-box h2,html[data-theme="dark"] .code-box h2{ color:var(--navy) }
+html[data-theme="dark"] .code-box,html[data-theme="dark"] .code-box h2{ color:#0d1830 }
+.toast{ background:var(--solid); color:var(--ink); border:2px solid var(--sky-m); box-shadow:0 18px 40px -14px rgba(27,45,92,.35); position:relative; overflow:hidden }
+.toast::before{ content:""; position:absolute; inset-inline-start:0; top:0; bottom:0; width:6px; background:var(--grad-2); background-size:100% 300% }
+.toast button{ color:var(--sky-d) }
+.badge{ background:linear-gradient(135deg,#f08aa0,#c9a4f2) }
+.qty-badge{ background:var(--sky-m); color:var(--navy) }
+
+/* hero logo: gentle float and a pastel halo */
+.hero-badge::after{ content:""; position:absolute; inset:34px; border-radius:50%; background:var(--grad); filter:blur(26px); opacity:.55; z-index:-1; animation:halo 5s ease-in-out infinite }
+@keyframes halo{ 50%{ transform:scale(1.12); opacity:.8 } }
+.logo-wrap{ box-shadow:0 6px 16px -8px rgba(124,196,239,.7) }

@@ -6,14 +6,14 @@
   const FINE = matchMedia('(hover:hover) and (pointer:fine)').matches;
   const me = document.currentScript;
   const BURST = (me && me.dataset.burst) || '.btn.primary, .primary';
-  const COLORS = ['#F9A8D4', '#C4B5FD', '#A7F3D0', '#FDE68A', '#93C5FD', '#FDBA74'];
+  const COLORS = ['#A8DCF8', '#C9C2F7', '#A7EAD3', '#F6B8C6', '#7CC4EF', '#D6E9FB'];
 
   const css = `
 .fx-r{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:var(--fx-d,0ms)}
 .fx-r.fx-in{opacity:1;transform:none}
 .fx-tilt{transform-style:preserve-3d;transition:transform .25s ease;will-change:transform}
 .fx-tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
-  background:radial-gradient(260px circle at var(--fx-x,50%) var(--fx-y,50%),rgba(255,255,255,.22),rgba(196,181,253,.10) 40%,transparent 70%)}
+  background:radial-gradient(260px circle at var(--fx-x,50%) var(--fx-y,50%),rgba(255,255,255,.22),rgba(124,196,239,.12) 40%,transparent 70%)}
 .fx-tilt:hover::after{opacity:1}
 button,.btn{transition:transform .15s ease}
 button:active:not(:disabled),.btn:active{transform:scale(.96)}
@@ -22,7 +22,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.96)}
 .fx-dot{position:fixed;z-index:9999;width:8px;height:8px;border-radius:50%;pointer-events:none;animation:fx-fly .8s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes fx-fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 #fx-bar{position:fixed;top:0;inset-inline-start:0;height:3px;width:100%;z-index:9998;transform-origin:var(--fx-o,left);transform:scaleX(0);
-  background:linear-gradient(90deg,#F9A8D4,#C4B5FD,#A7F3D0);pointer-events:none}
+  background:linear-gradient(90deg,#7CC4EF,#A7EAD3,#C9C2F7);pointer-events:none}
 @media (prefers-reduced-motion:reduce){.fx-r{opacity:1;transform:none;transition:none}.fx-tilt{transform:none!important}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 

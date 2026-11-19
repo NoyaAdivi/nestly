@@ -32,7 +32,7 @@
     root.setAttribute('data-theme', t);
     store.set('theme', t);
     var m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.content = t === 'dark' ? '#1E1A2E' : '#FFF4EF';
+    if (m) m.content = t === 'dark' ? '#1E1A2E' : '#F2FAF7';
   }
   if (!opt.themeBtn && !opt.attach) {
     var saved = store.get('theme', null);
@@ -43,30 +43,30 @@
   /* ---------- styles ---------- */
   var css = '' +
     '.nk-tab{position:fixed;z-index:2147483000;width:56px;height:56px;border-radius:50%;border:3px solid #fff;cursor:grab;touch-action:none;' +
-    'background:linear-gradient(135deg,#8B7CF6,#F28C7A);color:#fff;display:grid;place-items:center;box-shadow:0 12px 28px rgba(85,72,200,.35);transition:transform .2s}' +
-    '.nk-tab:hover{transform:scale(1.07)}.nk-tab:focus-visible{outline:3px solid #2C2668;outline-offset:3px}' +
+    'background:linear-gradient(135deg,#6FA8E8,#7FD4B8);color:#fff;display:grid;place-items:center;box-shadow:0 12px 28px rgba(27,45,92,.35);transition:transform .2s}' +
+    '.nk-tab:hover{transform:scale(1.07)}.nk-tab:focus-visible{outline:3px solid #1B2D5C;outline-offset:3px}' +
     '.nk-tab svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.nk-tab svg circle{fill:#fff;stroke:none}' +
     '.nk-dragging{cursor:grabbing!important;transform:scale(1.12)!important;transition:none!important}' +
     '.nk-panel{position:fixed;z-index:2147483001;width:320px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;' +
-    'background:#FFFDFC;color:#2C2668;border:2px solid #D9D3FF;border-radius:26px;padding:18px;box-shadow:0 24px 60px rgba(44,38,104,.28);' +
+    'background:#FFFFFF;color:#1B2D5C;border:2px solid #C5DEF5;border-radius:26px;padding:18px;box-shadow:0 24px 60px rgba(44,38,104,.28);' +
     'font:500 15px/1.4 Rubik,system-ui,sans-serif;animation:nkPop .22s ease-out}' +
     '@keyframes nkPop{from{transform:translateY(8px) scale(.97)}}' +
     '.nk-panel[hidden]{display:none}.nk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}' +
-    '.nk-head h2{margin:0;font:700 1.2rem Fredoka,Rubik,system-ui,sans-serif;color:#5548C8}' +
-    '.nk-x{border:0;background:#EEEAFF;color:#2C2668;border-radius:12px;width:34px;height:34px;font-size:1rem;cursor:pointer}' +
-    '.nk-lbl{display:block;font-size:.8rem;font-weight:700;color:#7A6B88;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em}' +
+    '.nk-head h2{margin:0;font:700 1.2rem Fredoka,Rubik,system-ui,sans-serif;color:#1B2D5C}' +
+    '.nk-x{border:0;background:#E6F2FD;color:#1B2D5C;border-radius:12px;width:34px;height:34px;font-size:1rem;cursor:pointer}' +
+    '.nk-lbl{display:block;font-size:.8rem;font-weight:700;color:#6A7B9C;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em}' +
     '.nk-row{display:flex;gap:8px;align-items:center}.nk-row .nk-val{flex:1;text-align:center;font-weight:700}' +
-    '.nk-b{flex:1;border:2px solid #E8E4FF;background:#FBFAFF;color:#2C2668;border-radius:14px;padding:10px 6px;font:700 .86rem Rubik,system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}' +
-    '.nk-b:hover{border-color:#B3A9FA}.nk-b[aria-pressed=true]{background:#5548C8;border-color:#5548C8;color:#fff}.nk-b span{font-size:1.15rem}' +
+    '.nk-b{flex:1;border:2px solid #DCEEFB;background:#F7FBFF;color:#1B2D5C;border-radius:14px;padding:10px 6px;font:700 .86rem Rubik,system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}' +
+    '.nk-b:hover{border-color:#9CC8EE}.nk-b[aria-pressed=true]{background:#1B2D5C;border-color:#1B2D5C;color:#fff}.nk-b span{font-size:1.15rem}' +
     '.nk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
-    '.nk-reset{width:100%;margin-top:12px;border:0;border-radius:14px;padding:11px;background:linear-gradient(135deg,#FFE6DE,#E8E4FF);color:#2C2668;font:700 .9rem Rubik,system-ui,sans-serif;cursor:pointer}' +
-    '.nk-hint{margin:10px 0 0;font-size:.78rem;color:#7A6B88;text-align:center}' +
-    'html[data-theme=dark] .nk-panel{background:#251F3A;color:#F1EEFF;border-color:#4A4170}html[data-theme=dark] .nk-head h2{color:#C9C1FF}' +
-    'html[data-theme=dark] .nk-b{background:#2F2847;border-color:#3E3560;color:#F1EEFF}html[data-theme=dark] .nk-b[aria-pressed=true]{background:#8B7CF6;border-color:#8B7CF6}' +
-    'html[data-theme=dark] .nk-x{background:#3E3560;color:#fff}html[data-theme=dark] .nk-reset{background:linear-gradient(135deg,#4A3A52,#3E3560);color:#fff}' +
-    'html[data-theme=dark] .nk-lbl,html[data-theme=dark] .nk-hint{color:#B9AFD6}' +
+    '.nk-reset{width:100%;margin-top:12px;border:0;border-radius:14px;padding:11px;background:linear-gradient(135deg,#E3F6EF,#DCEEFB);color:#1B2D5C;font:700 .9rem Rubik,system-ui,sans-serif;cursor:pointer}' +
+    '.nk-hint{margin:10px 0 0;font-size:.78rem;color:#6A7B9C;text-align:center}' +
+    'html[data-theme=dark] .nk-panel{background:#15264A;color:#EAF5FD;border-color:#24406E}html[data-theme=dark] .nk-head h2{color:#A9D4FF}' +
+    'html[data-theme=dark] .nk-b{background:#1A2D52;border-color:#2F4672;color:#EAF5FD}html[data-theme=dark] .nk-b[aria-pressed=true]{background:#6FA8E8;border-color:#6FA8E8}' +
+    'html[data-theme=dark] .nk-x{background:#2F4672;color:#fff}html[data-theme=dark] .nk-reset{background:linear-gradient(135deg,#173D3A,#2F4672);color:#fff}' +
+    'html[data-theme=dark] .nk-lbl,html[data-theme=dark] .nk-hint{color:#9FB2D4}' +
     /* effects */
-    'html.nk-links a{text-decoration:underline!important;text-underline-offset:3px;outline:2px dashed #E36E57;outline-offset:2px}' +
+    'html.nk-links a{text-decoration:underline!important;text-underline-offset:3px;outline:2px dashed #3D8A7A;outline-offset:2px}' +
     'html.nk-font body,html.nk-font body *:not(svg):not(svg *){font-family:"Atkinson Hyperlegible",Arial,"Segoe UI",sans-serif!important;letter-spacing:.02em}' +
     'html.nk-still *,html.nk-still *::before,html.nk-still *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}' +
     'html.nk-cursor,html.nk-cursor *{cursor:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Cpath d=%27M4 2l26 14-11 3 7 13-5 3-7-13-8 8z%27 fill=%27%232C2668%27 stroke=%27white%27 stroke-width=%272%27/%3E%3C/svg%3E") 4 2,auto!important}' +
