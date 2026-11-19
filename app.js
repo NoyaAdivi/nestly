@@ -317,7 +317,7 @@ function go(t, push = true) {
   $('#fab').hidden = t === 'shop';
   $('#fab').setAttribute('aria-label', { home: 'הוספה מהירה', tasks: 'משימה חדשה', family: 'הוספת בן או בת בית' }[t] || 'הוספה');
 }
-addEventListener('popstate', () => go(location.hash.slice(1) || 'home', false));
+addEventListener('popstate', () => { const h = location.hash.slice(1); if (LEGAL[h]) return legalSheet(h); go(h || 'home', false); });
 function setView(v) { document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + v; }
 function movePill() {
   const bar = $('#tabbar'), on = $('.tab.on', bar), pill = $('.tab-pill', bar); if (!on || !pill || bar.hidden) return;
@@ -404,8 +404,14 @@ function taskCard(t, i = 0) {
       <span class="t-emoji" aria-hidden="true">${esc(t.emoji || '✨')}</span>
       <span class="t-txt"><b>${esc(t.title)}</b><span class="meta">
         ${t.done ? `<span>✅ הושלם ${ago(t.doneAt)}</span>` : `<span class="${d.c}">${d.t}</span>`}
-        <span>${r.e} ${r.n}</span>${rep ? `<span>🔁 ${rep}</span>` : ''}${t.assignee === 'rotate' ? '<span>🔄 תורנות</span>' : ''}<span>⭐ ${POINTS[t.effort] || 10}</span></span></span>
-    </button>${avatar(o)}</li>`;
+        <span>${r.e} ${r.n}</span>${rep ? `<span>🔁 ${rep}</span>` : ''}${t.assignee === 'rotate' ? '<span>🔄 תורנות</span>' : ''}<span>⭐ ${POINTS[t.effort] || 10}</span></span>${whoLine(t, o)}</span>
+    </button><button class="who-btn" data-act="assign" data-id="${t.id}" aria-label="מי עושה את המשימה? כרגע: ${o ? esc(o.name) : 'מי שפנוי'}">${avatar(o)}<small>${o ? esc(o.name) : 'פנוי'}</small></button></li>`;
+}
+function whoLine(t, o) {
+  const by = member(t.done ? t.doneBy : t.lastBy);
+  if (t.done && by) return `<small class="who-line">✅ בוצע על ידי ${esc(by.emoji)} ${esc(by.name)}</small>`;
+  const tag = t.assignee === 'rotate' ? `🔄 התור של ${o ? esc(o.name) : '...'}` : o ? `👤 ${esc(o.name)} עושה את זה` : '👐 מי שפנוי';
+  return `<small class="who-line">${tag}${by ? ` · בפעם הקודמת: ${esc(by.name)}` : ''}</small>`;
 }
 function completeTask(id, btn) {
   const t = rec(id); if (!t) return;
@@ -438,7 +444,7 @@ function taskSheet(id, preset) {
     <div id="emo-box" hidden>${emojiGrid(TASK_EMOJIS, emo)}</div>
     <p class="err" id="err" aria-live="assertive"></p>
     <fieldset><legend>איפה בבית?</legend>${chips('room', ROOMS.map(r => [r.id, `${r.e} ${r.n}`]), t.room)}</fieldset>
-    <fieldset><legend>מי אחראי/ת?</legend>${chips('as', [['any', '👐 מי שפנוי'], ['rotate', '🔄 תורנות'], ...ms.map(m => [m.id, `${esc(m.emoji)} ${esc(m.name)}`])], t.assignee)}</fieldset>
+    <fieldset><legend>👤 מי עושה את המשימה?</legend>${chips('as', [['any', '👐 מי שפנוי'], ['rotate', '🔄 תורנות'], ...ms.map(m => [m.id, `${esc(m.emoji)} ${esc(m.name)}`])], t.assignee)}</fieldset>
     <fieldset><legend>כל כמה זמן?</legend>${chips('rep', [['none', 'פעם אחת'], ['daily', 'כל יום'], ['weekly', 'כל שבוע'], ['interval', 'כל כמה ימים'], ['monthly', 'כל חודש']], t.repeat.type)}
       <div data-show="weekly">${chips('days', DSH.map((d, i) => [String(i), d]), (t.repeat.days || []).map(String), true, 'days')}<small class="muted">אפשר לבחור כמה ימים</small></div>
       <label class="inline" data-show="interval">כל <input type="number" name="every" min="2" max="90" value="${t.repeat.every || 3}" aria-label="מספר ימים"> ימים</label></fieldset>
@@ -483,15 +489,19 @@ shopView.shell = () => `<div class="page-h"><h1>🛒 רשימת קניות</h1><
     ${SR ? '<button type="button" class="mic" data-act="mic" aria-label="הוספה בקול">🎤</button>' : ''}
     <div class="qty" role="group" aria-label="כמות"><button type="button" data-act="q" data-d="-1" aria-label="הפחתת כמות">−</button><output id="q-out" aria-live="polite">1</output><button type="button" data-act="q" data-d="1" aria-label="הוספת כמות">+</button></div>
     <button class="btn primary" aria-label="הוספה לרשימה">➕</button>
-  </form><div id="dyn"></div>`;
+  </form>
+  <div class="cat-pick"><label for="cat-sel">🗂️ מחלקה:</label><select id="cat-sel"><option value="">🪄 אוטומטית</option>${CAT_ORDER.map(cat).map(c => `<option value="${c.id}">${c.e} ${c.n}</option>`).join('')}</select><span id="cat-guess" class="muted" aria-live="polite"></span></div><div id="dyn"></div>`;
 shopView.mount = () => {
+  const inp0 = $('#item-in'), sel = $('#cat-sel'), guess = $('#cat-guess');
+  const showGuess = () => { const n = inp0.value.split(/[,\n،]+/)[0].trim(); guess.textContent = !sel.value && n ? `← ${cat(guessCat(n)).e} ${cat(guessCat(n)).n}` : ''; };
+  inp0.addEventListener('input', showGuess); sel.onchange = showGuess;
   $('#add-item').onsubmit = e => {
     e.preventDefault(); const inp = $('#item-in');
     const names = inp.value.split(/[,\n،]+/).map(s => s.trim()).filter(Boolean);
     if (!names.length) { inp.focus(); return; }
-    names.forEach(n => addItem(n, names.length > 1 ? 1 : qty, names.length > 1));
+    names.forEach(n => addItem(n, names.length > 1 ? 1 : qty, names.length > 1, sel.value || null));
     if (names.length > 1) toast(`🛒 ${names.length} פריטים נוספו לרשימה`);
-    inp.value = ''; qty = 1; $('#q-out').textContent = 1; inp.focus();
+    inp.value = ''; qty = 1; $('#q-out').textContent = 1; sel.value = ''; showGuess(); inp.focus();
   };
 };
 shopView.body = () => {
@@ -511,16 +521,17 @@ function itemRow(x, i) {
   const by = member(x.by);
   return `<li class="item ${x.bought ? 'bought' : ''} ${pop(x.id + (x.bought ? 'b' : ''))}" style="--i:${i}" data-id="${x.id}">
     <button class="check" data-act="buy" data-id="${x.id}" aria-label="${x.bought ? 'החזרה לרשימה' : 'סימון שנקנה'}: ${esc(x.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-    <button class="i-main" data-act="edit-item" data-id="${x.id}" aria-label="עריכה: ${esc(x.name)}"><span><b>${esc(x.name)}</b>${x.qty > 1 ? `<span class="qty-badge">×${x.qty}</span>` : ''}${x.note ? `<small>${esc(x.note)}</small>` : ''}</span></button>
+    ${x.photo ? `<button class="i-photo" data-act="photo" data-id="${x.id}" aria-label="הגדלת התמונה של ${esc(x.name)}"><img src="${x.photo}" alt=""></button>` : ''}
+    <button class="i-main" data-act="edit-item" data-id="${x.id}" aria-label="עריכה: ${esc(x.name)}"><span><b>${esc(x.name)}</b>${x.qty > 1 ? `<span class="qty-badge">×${x.qty}</span>` : ''}${x.note ? `<small>${esc(x.note)}</small>` : ''}<small class="by-line">${by ? `נוסף על ידי ${esc(by.emoji)} ${esc(by.name)}` : 'נוסף לרשימה'}${x.at ? ` · ${ago(new Date(x.at).toISOString())}` : ''}</small></span></button>
     ${by ? avatar(by, 'sm') : ''}</li>`;
 }
-function addItem(name, q = 1, quiet = false) {
+function addItem(name, q = 1, quiet = false, forceCat = null) {
   name = name.slice(0, 80);
   const ex = rows('shop').find(i => !i.bought && i.name === name);
   const hist = { ...(rec('hist') || {}) }; hist[name] = (hist[name] || 0) + 1; delete hist.id;
   const histRow = ['hist', { ...hist, id: 'hist' }];
   if (ex) { write([['shop', { ...ex, qty: (ex.qty || 1) + q }], histRow]); quiet || toast(`🔁 "${esc(name)}" כבר ברשימה, הכמות עודכנה`); flash(ex.id); return; }
-  const it = { id: uid(), name, qty: q, cat: guessCat(name), by: S.meId, at: Date.now() };
+  const it = { id: uid(), name, qty: q, cat: forceCat || guessCat(name), by: S.meId, at: Date.now() };
   write([['shop', it], histRow]);
   quiet || toast(`${cat(it.cat).e} "${esc(name)}" נוסף לרשימה`);
 }
@@ -545,6 +556,80 @@ function recToggle(name) {
   else { addItem(name, 1, true); const it = rows('shop').find(i => !i.bought && i.name === name); if (it && it.cat !== recCat) put('shop', { ...it, cat: recCat }); toast(`${cat(recCat).e} "${esc(name)}" נוסף לרשימה`); }
   recsSheet();
 }
+/* shrink a photo to a small JPEG so it fits the 20 KB row limit */
+function shrinkPhoto(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      for (const [size, q] of [[320, .72], [260, .62], [200, .55], [160, .5]]) {
+        const k = Math.min(1, size / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const d = c.toDataURL('image/jpeg', q); if (d.length < 15000) return res(d);
+      }
+      rej(new Error('big'));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+function photoSheet(id) {
+  const x = rec(id); if (!x?.photo) return;
+  sheet(`<h2 id="sheet-title">📷 ${esc(x.name)}</h2><img class="photo-big" src="${x.photo}" alt="התמונה של ${esc(x.name)}">${x.note ? `<p class="muted">📝 ${esc(x.note)}</p>` : ''}<div class="actions"><button type="button" class="btn primary" data-act="close">👍 סגירה</button><button type="button" class="btn ghost" data-act="edit-item" data-id="${id}">✏️ עריכה</button></div>`);
+}
+function assignSheet(id) {
+  const t = rec(id); if (!t) return;
+  const opt = (v, html, sub) => `<button class="set-row" data-act="assign-to" data-id="${id}" data-who="${v}"><span>${html}</span><span><b>${sub}</b></span><span aria-hidden="true">${t.assignee === v ? '✓' : '←'}</span></button>`;
+  sheet(`<h2 id="sheet-title">👤 מי עושה את "${esc(t.title)}"?</h2><p class="muted" style="margin-top:-6px">מתייגים בן או בת בית, והמשימה תופיע אצלם תחת "שלי".</p>
+    <div class="settings">${members().map(m => opt(m.id, avatar(m), `${esc(m.name)}${m.id === S.meId ? ' (אני)' : ''}`)).join('')}
+    ${opt('any', '<span class="av any">👐</span>', 'מי שפנוי')}${opt('rotate', '<span class="av any">🔄</span>', 'תורנות, עובר לבא בתור')}
+    <button class="set-row" data-act="assign-new" data-id="${id}"><span class="e">✨</span><span><b>בן/בת בית חדש/ה</b><small>להוסיף ולתייג מיד</small></span><span aria-hidden="true">←</span></button></div>`);
+}
+
+/* ----- legal and info pages (deep links: #accessibility #privacy #terms #contact) ----- */
+const UPDATED = '19.11.2026';
+const LEGAL = {
+  accessibility: ['♿ הצהרת נגישות', () => `<p>אנחנו רואים חשיבות רבה במתן שירות שוויוני לכל המשתמשים, ומשקיעים כדי ש־Nestly יהיה נוח ונגיש גם לאנשים עם מוגבלות.</p>
+    <h3>רמת הנגישות</h3><p>האתר הונגש בהתאם לתקן הישראלי ת"י 5568 ולהנחיות WCAG 2.1 ברמה AA, ככל שהדבר אפשרי.</p>
+    <h3>מה עשינו באתר</h3><ul>
+      <li>כפתור נגישות שאפשר להזיז לכל מקום במסך: הגדלת טקסט, ניגודיות גבוהה, גופן קריא, הדגשת קישורים, סמן גדול, גווני אפור ועצירת אנימציות</li>
+      <li>מצב כהה ותמיכה בהגדרת "הפחתת תנועה" של המכשיר</li>
+      <li>ניווט מלא במקלדת, קישור "דילוג לתוכן" ומיקוד ברור</li>
+      <li>תוויות ותיאורים לקוראי מסך, הודעות חיות על פעולות והתראות</li>
+      <li>ניגודיות צבעים מספקת, כפתורים גדולים ונוחים ללחיצה</li>
+      <li>אפשרות לבטל כמעט כל פעולה, כדי שטעות לא תעלה ביוקר</li>
+      <li>האתר עובד בעברית מימין לשמאל ומותאם לטלפון, טאבלט ומחשב</li></ul>
+    <h3>מגבלות ידועות</h3><ul><li>תמונות של מוצרים שמעלים בני הבית לא תמיד כוללות תיאור מלא</li><li>קוד ה־QR מיוצר על ידי ספרייה חיצונית. לצידו תמיד יש גם קוד וקישור להעתקה</li><li>מראה האימוג׳י תלוי במכשיר</li></ul>
+    <h3>נתקלתם בבעיה?</h3><p>אם משהו לא נגיש או לא עובד כמו שצריך, נשמח לשמוע ולתקן. כדאי לציין באיזה עמוד, מה ניסיתם לעשות ובאיזה מכשיר ודפדפן.</p>
+    <p><b>רכזת הנגישות:</b> נויה אדיבי</p>${contactBtns()}<p class="muted">ההצהרה עודכנה בתאריך ${UPDATED}</p>`],
+  privacy: ['🔒 מדיניות פרטיות', () => `<p>Nestly נבנה כך שיאסוף כמה שפחות מידע, ורק את מה שצריך כדי שהבית יעבוד.</p>
+    <h3>איזה מידע נשמר</h3><ul><li>שם הבית, שמות ודמויות של בני הבית</li><li>המשימות, רשימת הקניות, הערות ותמונות מוצרים שהעליתם</li><li>היסטוריית נקודות ומשימות שבוצעו</li></ul>
+    <p>אין צורך בהרשמה, באימייל או בטלפון, ואנחנו לא מבקשים מידע מזהה.</p>
+    <h3>איפה המידע נשמר</h3><p>המידע נשמר במכשיר שלכם, ואם הבית מחובר לענן, גם במסד נתונים של Supabase. הגישה אליו אפשרית רק עם קוד הבית, וכל החוקים נאכפים בצד השרת.</p>
+    <h3>מה אנחנו לא עושים</h3><ul><li>לא מוכרים ולא משתפים מידע עם אף אחד</li><li>אין פרסומות ואין כלי מעקב או אנליטיקה</li><li>אין עוגיות מעקב. האתר שומר רק העדפות כמו מצב כהה והגדרות נגישות</li></ul>
+    <h3>שירותים חיצוניים</h3><p>הגופנים נטענים מ־Google Fonts וספריית ה־QR מ־jsDelivr. שירותים אלה מקבלים את כתובת ה־IP שלכם כמו בכל אתר.</p>
+    <h3>מחיקת מידע</h3><p>אפשר למחוק פריטים ומשימות בכל רגע, להוריד גיבוי מלא, או לצאת מהבית במכשיר דרך ההגדרות. למחיקת בית שלם מהענן אפשר לפנות אלינו.</p>
+    <p class="muted">עודכן בתאריך ${UPDATED}</p>`],
+  terms: ['📜 תנאי שימוש', () => `<p>ברוכים הבאים ל־Nestly. השימוש באתר מהווה הסכמה לתנאים הבאים.</p>
+    <h3>מה זה Nestly</h3><p>אתר חינמי לניהול משימות הבית ורשימת קניות משותפת. זהו פרויקט אישי בקוד פתוח, ואין בו תשלומים.</p>
+    <h3>שימוש הוגן</h3><ul><li>משתמשים באתר לצרכים אישיים ומשפחתיים</li><li>לא מעלים תוכן פוגעני, לא חוקי או מידע רגיש (כמו מספרי אשראי או סיסמאות)</li><li>שומרים את קוד הבית רק בין בני הבית</li></ul>
+    <h3>אחריות</h3><p>האתר ניתן כמו שהוא (AS IS). אנחנו עושים כמיטב יכולתנו שיעבוד תמיד, אבל לא ניתן להבטיח שלא יהיו תקלות או אובדן מידע. מומלץ להוריד גיבוי מדי פעם.</p>
+    <h3>קוד פתוח</h3><p>קוד המקור זמין ב־<a href="https://github.com/NoyaAdivi/nestly" target="_blank" rel="noopener">GitHub</a>.</p>
+    <h3>שינויים</h3><p>התנאים עשויים להתעדכן מעת לעת. התאריך למטה מראה מתי עודכנו לאחרונה.</p>
+    <p class="muted">עודכן בתאריך ${UPDATED}</p>`],
+  contact: ['✉️ יצירת קשר', () => `<p>יש שאלה, רעיון לשיפור או משהו שלא עובד? נשמח לשמוע!</p>${contactBtns()}<p class="muted">אפשר גם לקרוא את <button type="button" class="link-btn" data-act="to-faq">❓ השאלות הנפוצות</button></p>`]
+};
+function contactBtns() {
+  return `<div class="contact-btns"><a class="btn soft" href="https://github.com/NoyaAdivi/nestly/issues/new" target="_blank" rel="noopener">🐞 דיווח על בעיה ב־GitHub</a><a class="btn soft" href="https://www.linkedin.com/in/noya-adivi/" target="_blank" rel="noopener">💼 הודעה בלינקדאין</a></div>`;
+}
+function legalSheet(k) {
+  const L = LEGAL[k]; if (!L) return;
+  sheet(`<h2 id="sheet-title">${L[0]}</h2><div class="legal">${L[1]()}</div>
+    <nav class="legal-nav" aria-label="עמודי מידע">${Object.entries(LEGAL).filter(([x]) => x !== k).map(([x, v]) => `<a href="#${x}" data-act="legal" data-p="${x}">${v[0]}</a>`).join('')}</nav>
+    <div class="actions"><button type="button" class="btn primary" data-act="close">👍 הבנתי</button></div>`);
+  $('.sheet-card') && ($('.sheet-card').scrollTop = 0);
+}
 const flash = id => setTimeout(() => $(`.item[data-id="${id}"]`)?.classList.add('flash'), 30);
 function itemSheet(id) {
   const x = clone(rec(id)); if (!x) return;
@@ -553,9 +638,16 @@ function itemSheet(id) {
     <label class="field"><span>כמות</span><input type="number" name="qty" min="1" max="99" value="${x.qty || 1}"></label>
     <fieldset><legend>קטגוריה</legend>${chips('cat', CATS.map(c => [c.id, `${c.e} ${c.n}`]), x.cat)}</fieldset>
     <label class="field"><span>הערה</span><input name="note" maxlength="80" value="${esc(x.note || '')}" placeholder="למשל: 3% שומן, המותג הכחול"></label>
+    <fieldset><legend>📷 תמונה של המוצר</legend><div class="photo-field"><div class="photo-prev" id="ph-prev">${x.photo ? `<img src="${x.photo}" alt="התמונה של ${esc(x.name)}">` : '<span aria-hidden="true">🖼️</span>'}</div>
+      <div class="photo-btns"><label class="btn soft" tabindex="0">📸 ${x.photo ? 'החלפת תמונה' : 'הוספת תמונה'}<input type="file" id="ph-in" accept="image/*" class="sr"></label>${x.photo ? '<button type="button" class="btn ghost" id="ph-del">🗑️ הסרה</button>' : ''}<small class="muted">כדי שכולם יידעו בדיוק איזה מוצר לקנות</small></div></div></fieldset>
     <p class="muted" style="margin:0">${member(x.by) ? `נוסף על ידי ${esc(member(x.by).emoji)} ${esc(member(x.by).name)}` : ''}</p>
     <div class="actions"><button class="btn primary">💾 שמירה</button><button type="button" class="btn ghost danger" data-act="del-item" data-id="${id}">🗑️ מחיקה</button></div></form>`, b => {
-    $('#f', b).onsubmit = e => { e.preventDefault(); const f = e.target; const n = f.name.value.trim(); if (!n) return f.name.focus(); put('shop', { ...x, name: n, qty: Math.max(1, +f.qty.value || 1), cat: chipVal(b, 'cat'), note: f.note.value.trim() }); closeSheet(); toast('✅ הפריט עודכן'); };
+    let photo = x.photo || '';
+    const prev = $('#ph-prev', b), lab = $('#ph-in', b).closest('label');
+    lab.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#ph-in', b).click(); } };
+    $('#ph-in', b).onchange = async e => { const f = e.target.files[0]; if (!f) return; prev.innerHTML = '<span aria-hidden="true">⏳</span>'; try { photo = await shrinkPhoto(f); prev.innerHTML = `<img src="${photo}" alt="תמונה חדשה">`; } catch { prev.innerHTML = '<span aria-hidden="true">🖼️</span>'; toast('😕 לא הצלחתי לקרוא את התמונה'); } };
+    $('#ph-del', b) && ($('#ph-del', b).onclick = () => { photo = ''; prev.innerHTML = '<span aria-hidden="true">🖼️</span>'; });
+    $('#f', b).onsubmit = e => { e.preventDefault(); const f = e.target; const n = f.name.value.trim(); if (!n) return f.name.focus(); const nx = { ...x, name: n, qty: Math.max(1, +f.qty.value || 1), cat: chipVal(b, 'cat'), note: f.note.value.trim() }; if (photo) nx.photo = photo; else delete nx.photo; put('shop', nx); closeSheet(); toast('✅ הפריט עודכן'); };
   });
 }
 function shareList() {
@@ -792,6 +884,11 @@ document.addEventListener('click', e => {
     case 'del-item': { const x = clone(rec(id)); del(id); closeSheet(); toast(`🗑️ "${esc(x.name)}" הוסר`, { undo: () => put('shop', x) }); break; }
     case 'clear-bought': { const b = rows('shop').filter(i => i.bought).map(clone); write(b.map(i => ['del', i.id])); toast(`🧹 ${b.length} פריטים נוקו`, { undo: () => write(b.map(i => ['shop', i])) }); break; }
     case 'share-list': shareList(); break;
+    case 'photo': photoSheet(id); break;
+    case 'assign': assignSheet(id); break;
+    case 'assign-to': { const t = rec(id), w = a.dataset.who; if (!t) break; const nt = { ...t, assignee: w }; if (w === 'rotate' && !member(nt.turn)) nt.turn = S.meId || members()[0]?.id; put('task', nt); closeSheet(); toast(w === 'any' ? '👐 כל מי שפנוי יכול לעשות את זה' : w === 'rotate' ? '🔄 המשימה עברה לתורנות' : `🏷️ ${esc(member(w)?.name || '')} מתויג/ת על "${esc(t.title)}"`); break; }
+    case 'assign-new': memberSheet(null, { onDone: m => { const t = rec(id); if (t) put('task', { ...t, assignee: m.id }); } }); break;
+    case 'legal': e.preventDefault(); legalSheet(a.dataset.p); break;
     case 'recs': recsSheet(); break;
     case 'rec-cat': recsSheet(a.dataset.c); break;
     case 'rec-add': recToggle(a.dataset.n); break;
@@ -815,9 +912,12 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- start ---------- */
+{ const y = $('#yr'); if (y) y.textContent = new Date().getFullYear(); }
 function start() {
   $('#tabbar').hidden = false; requestAnimationFrame(movePill);
-  go(location.hash.slice(1) || 'home', false);
+  const h = location.hash.slice(1);
+  go(LEGAL[h] ? 'home' : h || 'home', false);
+  if (LEGAL[h]) setTimeout(() => legalSheet(h), 300);
   sync();
 }
 window.addEventListener('load', () => tab === 'family' && drawQR());
@@ -825,6 +925,6 @@ window.addEventListener('load', () => tab === 'family' && drawQR());
 const joinParam = new URLSearchParams(location.search).get('join');
 if (S.code && (!joinParam || joinParam.toUpperCase() === S.code)) { if (joinParam) history.replaceState(null, '', location.pathname + '#home'); start(); }
 else if (S.code && joinParam) { start(); sheet(`<h2 id="sheet-title">🏡 קישור לבית אחר</h2><p>כבר יש לך בית במכשיר הזה (${esc(homeName())}). כדי להצטרף לבית אחר צריך קודם לצאת מהבית הנוכחי בהגדרות.</p><div class="actions"><button class="btn primary" data-act="close">הבנתי</button></div>`); history.replaceState(null, '', location.pathname + '#home'); }
-else { onboarding(joinParam); setSync('local'); }
+else { onboarding(joinParam); setSync('local'); const h = location.hash.slice(1); if (LEGAL[h]) setTimeout(() => legalSheet(h), 300); }
 
 

@@ -532,3 +532,61 @@ html[data-theme="dark"] .rec.added b{ color:#0d1830 }
 .page-btns .btn{ padding:0 12px!important; white-space:nowrap }
 @media (max-width:380px){ .page-btns .btn{ padding:0 10px!important; font-size:.86rem } }
 @media (max-width:480px){ .page-btns .bt{ display:none } .page-h h1{ font-size:1.5rem } }
+
+/* ---------- compact footer ---------- */
+.site-foot{ max-width:640px; padding:6px 14px calc(170px + env(safe-area-inset-bottom)) }
+body.view-onb .site-foot{ padding-bottom:28px }
+.foot-card{ padding:14px 14px 12px; border-radius:22px; text-align:center }
+.foot-top{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px }
+.foot-logo{ width:42px; height:42px; border-radius:13px; flex:none }
+.foot-logo img{ width:36px; height:36px }
+.foot-t{ margin:0; display:flex; flex-direction:column; text-align:start; line-height:1.3; font-size:.84rem }
+.foot-t b{ font-size:1.05rem }
+.foot-links{ gap:6px; margin:0 0 8px }
+.foot-links a,.foot-links button{ padding:6px 11px; font-size:.8rem; border-width:1.5px }
+.foot-legal{ display:flex; flex-wrap:wrap; justify-content:center; gap:4px 14px; padding:8px 0 6px; border-top:1px dashed var(--line); margin-top:4px }
+.foot-legal a{ color:var(--muted); font-size:.8rem; font-weight:600; text-decoration:underline; text-decoration-color:var(--line-2); text-underline-offset:3px; padding:4px 2px; border-radius:6px }
+.foot-legal a:hover,.foot-legal a:focus-visible{ color:var(--navy); text-decoration-color:var(--sky) }
+.built-by{ margin:2px 0 0; font-size:.78rem; color:var(--muted) }
+.built-by a{ display:inline-flex; align-items:center; gap:4px; font-weight:700; color:var(--navy); text-decoration:none; padding:2px 8px; border-radius:99px; background:var(--sky-l) }
+.built-by svg{ width:.95em; height:.95em; fill:#0a66c2 }
+html[data-theme="dark"] .built-by svg{ fill:#8fd0ff }
+
+/* ---------- tasks: who does it ---------- */
+.who-btn{ flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px; border-radius:14px; max-width:64px; transition:background .2s, transform .2s var(--ease) }
+.who-btn small{ font-size:.66rem; font-weight:700; color:var(--muted); max-width:58px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.who-btn:hover{ background:var(--sky-l); transform:translateY(-2px) }
+.who-btn:hover .av{ box-shadow:0 0 0 3px var(--sky-m) }
+.who-line{ display:block; margin-top:4px; font-size:.76rem; color:var(--muted); font-weight:500 }
+
+/* ---------- shop: author, photo, category ---------- */
+.by-line{ display:block; font-size:.74rem!important; color:var(--muted); margin-top:2px; font-weight:500 }
+.i-photo{ flex:none; width:46px; height:46px; border-radius:12px; overflow:hidden; border:2px solid var(--line); background:var(--solid); transition:transform .25s var(--ease) }
+.i-photo img{ width:100%; height:100%; object-fit:cover; display:block }
+.i-photo:hover{ transform:scale(1.08) rotate(-3deg) }
+.cat-pick{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 4px 2px; font-size:.86rem; font-weight:600; color:var(--navy) }
+.cat-pick select{ font:inherit; font-weight:600; color:var(--navy); background:var(--solid); border:2px solid var(--line); border-radius:99px; padding:5px 12px; cursor:pointer }
+.cat-pick select:focus-visible{ outline:none; border-color:var(--sky); box-shadow:0 0 0 4px color-mix(in srgb,var(--sky) 30%,transparent) }
+#cat-guess{ font-weight:500 }
+.photo-field{ display:flex; gap:12px; align-items:center }
+.photo-prev{ flex:none; width:84px; height:84px; border-radius:18px; overflow:hidden; background:var(--bg2); border:2px dashed var(--line-2); display:grid; place-items:center; font-size:1.8rem }
+.photo-prev img{ width:100%; height:100%; object-fit:cover }
+.photo-btns{ display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+.photo-btns label.btn{ cursor:pointer; min-height:40px; padding:0 14px }
+.photo-btns label.btn:focus-within,.photo-btns label.btn:focus-visible{ box-shadow:0 0 0 4px color-mix(in srgb,var(--sky) 35%,transparent) }
+.photo-btns small{ flex-basis:100% }
+.photo-big{ display:block; width:100%; max-height:60vh; object-fit:contain; border-radius:18px; background:var(--bg2); margin:6px 0 12px }
+
+/* ---------- legal pages ---------- */
+.legal{ line-height:1.65; font-size:.95rem }
+.legal h3{ font-size:1.02rem; margin:16px 0 4px }
+.legal ul{ margin:4px 0; padding-inline-start:20px } .legal li{ margin:3px 0 }
+.legal p{ margin:6px 0 }
+.legal a{ color:var(--sky-d); font-weight:600 }
+.contact-btns{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 }
+.contact-btns .btn{ min-height:42px; padding:0 14px; text-decoration:none }
+.legal-nav{ display:flex; flex-wrap:wrap; gap:6px; margin:16px 0 4px; padding-top:12px; border-top:1px dashed var(--line) }
+.legal-nav a{ padding:6px 12px; border-radius:99px; background:var(--sky-l); color:var(--navy); font-weight:600; font-size:.84rem; text-decoration:none }
+.legal-nav a:hover{ background:var(--sky-m) }
+
+.cat-pick select{ width:auto; max-width:220px; flex:none }

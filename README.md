@@ -53,6 +53,7 @@
         <li><a href="app.js"><b>Recurring</b></a>: daily, chosen weekdays, every X days or monthly</li>
         <li>A finished chore <b>jumps to its next date</b> by itself</li>
         <li><b>Fair rotation</b>: passes to the next family member each time</li>
+        <li><b>Tag who does it</b>: tap the avatar on any chore to assign it</li>
         <li><b>30 ready-made chores</b> grouped by room, one tap to add</li>
       </ul>
     </td>
@@ -61,7 +62,8 @@
       <ul>
         <li>Items <b>sort themselves by aisle</b>, with quantity and notes</li>
         <li><b>Add many at once</b> with commas (milk, eggs, bread) or <b>by voice</b> 🎤</li>
-        <li><b>"Buy again"</b> suggestions from what you bought before</li>
+        <li><b>Who added what</b>, a <b>photo of the product</b> and a chosen aisle</li>
+        <li><b>Recommended list</b> by aisle and <b>"buy again"</b> suggestions</li>
         <li><b>Send the list</b> on WhatsApp, the share menu or as text</li>
       </ul>
     </td>
@@ -90,6 +92,7 @@
         <li><a href="noya-kit.js"><b>Draggable accessibility button</b></a>: text size, contrast, readable font, big cursor, grayscale, stop motion</li>
         <li><b>Dark mode</b>, keyboard and screen reader support</li>
         <li><b>Undo everywhere</b>: done, delete and clear can be undone</li>
+        <li><b>Accessibility statement</b>, privacy policy and terms of use</li>
       </ul>
     </td>
     <td valign="top" width="33%">
