@@ -32,7 +32,8 @@
 - 📤 **שליחת הרשימה** בוואטסאפ, דרך תפריט השיתוף או כטקסט מועתק
 - ↩️ **ביטול בכל מקום**: אפשר לבטל סימון, מחיקה וניקוי
 - 🎉 **כיף לשימוש**: קונפטי, אנימציות פסטליות ואימוג׳ים בכל מקום
-- ♿ **נגישות**: גודל טקסט, מצב כהה, ניגודיות גבוהה, גופן קריא, עצירת אנימציות, תמיכה במקלדת ובקורא מסך
+- ♿ **נגישות**: כפתור נגישות שאפשר לגרור לכל מקום (גודל טקסט, ניגודיות גבוהה, גופן קריא, סמן גדול, גווני אפור, עצירת אנימציות), כפתור מצב כהה, תמיכה במקלדת ובקורא מסך
+- ❓ **שאלות נפוצות ועזרה**: שאלות לפי נושא עם חיפוש ומדריך "איך זה עובד"
 - 📲 **התקנה כאפליקציה (PWA)**: הוספה למסך הבית, עובד בלי אינטרנט ומסתנכרן כשחוזרים לרשת
 - 💾 **גיבוי**: הורדת כל נתוני הבית כקובץ JSON
 
@@ -67,10 +68,16 @@ nestly/
 ├── styles.css            pastel design, animations, dark mode, accessibility modes
 ├── app.js                all logic: chores, shopping, members, sync, onboarding
 ├── config.js             Supabase URL and anon key
+├── noya-kit.js           draggable accessibility button + dark mode (shared by all my sites)
+├── noya-app.js           FAQ by topic, install as app, scroll progress (shared)
+├── fx.js                 scroll reveals, ripples, sparkle bursts (shared)
+├── faq.js                Nestly's FAQ questions and answers
 ├── supabase.sql          tables, security and functions (run once)
 ├── sw.js                 offline Service Worker
 ├── manifest.webmanifest  installable app settings
 ├── icon.svg              logo
+├── logo.svg              animated logo
+├── icon-180.png          app icon (iPhone)
 ├── icon-192.png          app icon
 ├── icon-512.png          app icon
 └── nestly.png            screenshot

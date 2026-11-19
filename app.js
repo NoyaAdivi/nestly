@@ -115,7 +115,8 @@ const del = id => write([['del', id]]);
 /* ---------- cloud sync (Supabase RPC) ---------- */
 let syncing = false, syncTimer = 0;
 async function rpc(fn, body) {
-  const r = await fetch(`${CFG.supabaseUrl.replace(/\/$/, '')}/rest/v1/rpc/${fn}`, {
+  const base = CFG.supabaseUrl.trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+  const r = await fetch(`${base}/rest/v1/rpc/${fn}`, {
     method: 'POST',
     headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -226,7 +227,7 @@ function toast(msg, { undo, ms = 3800 } = {}) {
   if (undo) el.querySelector('button').onclick = () => { undo(); kill(); };
   setTimeout(kill, ms);
 }
-const calm = () => document.documentElement.classList.contains('calm') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const calm = () => document.documentElement.classList.contains('nk-still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 let parts = [], raf = 0;
 function confetti(x = innerWidth / 2, y = innerHeight / 2, n = 70) {
   if (calm()) return;
@@ -269,35 +270,22 @@ function closeSheet() {
 dlg.addEventListener('click', e => { if (e.target === dlg) closeSheet(); });
 dlg.addEventListener('cancel', e => { e.preventDefault(); closeSheet(); });
 
-/* ---------- accessibility prefs ---------- */
-let A = (() => { try { return JSON.parse(localStorage.getItem(AKEY)) || {}; } catch { return {}; } })();
-function applyA11y() {
-  const h = document.documentElement;
-  const dark = A.dark ?? matchMedia('(prefers-color-scheme: dark)').matches;
-  h.classList.toggle('dark', dark);
-  ['contrast', 'readable', 'calm', 'links'].forEach(k => h.classList.toggle(k, !!A[k]));
-  h.style.setProperty('--fs', A.size || 1);
-  $('meta[name=theme-color]').content = dark ? '#1b1928' : '#c9b8ff';
+/* ---------- shared kit (noya-kit.js): accessibility button + dark mode ---------- */
+// the kit's button starts above the tab bar here, unless the user already dragged it somewhere
+function placeKit() {
+  const t = document.querySelector('.nk-tab'); if (!t) return;
+  let saved = null; try { saved = JSON.parse(localStorage.getItem('noya-kit:pos')); } catch { }
+  if (saved) return;
+  t.style.top = Math.max(80, innerHeight - (innerWidth < 700 ? 236 : 200)) + 'px';
 }
-applyA11y();
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyA11y);
-function a11ySheet() {
-  const opts = [['dark', '🌙', 'מצב כהה', 'צבעים רכים לעיניים בלילה'], ['contrast', '🔆', 'ניגודיות גבוהה', 'טקסט כהה וחד יותר'], ['readable', '📖', 'גופן קריא', 'גופן פשוט עם ריווח רחב'], ['calm', '🧘', 'עצירת אנימציות', 'בלי תנועה וקונפטי'], ['links', '🔗', 'הדגשת כפתורים וקישורים', 'קו תחתון ומסגרת לכל כפתור']];
-  const isDark = A.dark ?? document.documentElement.classList.contains('dark');
-  sheet(`<h2 id="sheet-title">♿ הגדרות נגישות</h2>
-  <fieldset><legend>גודל טקסט</legend>${chips('size', [['0.9', 'א קטן'], ['1', 'א רגיל'], ['1.15', 'א גדול'], ['1.3', 'א ענק']], String(A.size || 1))}</fieldset>
-  <div style="margin-top:10px">${opts.map(([k, e, n, d]) => `<button type="button" class="switch-row" role="switch" data-sw="${k}" aria-checked="${k === 'dark' ? isDark : !!A[k]}"><span><b>${e} ${n}</b><br><small class="muted">${d}</small></span><span class="sw" aria-hidden="true"></span></button>`).join('')}</div>
-  <div class="actions" style="margin-top:16px"><button type="button" class="btn ghost" data-act="a11y-reset">↺ איפוס להגדרות ברירת המחדל</button></div>`, b => {
-    b.addEventListener('chip', e => { if (e.detail.group === 'size') { A.size = +e.detail.val; saveA(); } });
-  });
-}
-const saveA = () => { localStorage.setItem(AKEY, JSON.stringify(A)); applyA11y(); };
+addEventListener('load', () => setTimeout(placeKit, 60));
+addEventListener('resize', () => setTimeout(placeKit, 60));
 
 /* ---------- views ---------- */
 let tab = 'home';
 const main = $('#main');
 const VIEWS = { home: homeView, tasks: tasksView, shop: shopView, family: familyView };
-const credit = `<p class="credit">נבנה באהבה 💜 על ידי <a href="https://github.com/NoyaAdivi" target="_blank" rel="noopener">נויה עדיבי</a></p>`;
+const credit = '';
 
 function go(t, push = true) {
   if (!S.code) return;
@@ -305,6 +293,7 @@ function go(t, push = true) {
   tab = t; seen.clear();
   if (push && location.hash !== '#' + t) history.pushState(null, '', '#' + t);
   $$('.tab').forEach(b => { const on = b.dataset.go === t; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
+  setView(t); movePill();
   const v = VIEWS[t];
   main.innerHTML = `<div class="view">${v.shell ? v.shell() : '<div id="dyn"></div>'}</div>`;
   v.mount && v.mount();
@@ -314,6 +303,14 @@ function go(t, push = true) {
   $('#fab').setAttribute('aria-label', { home: 'הוספה מהירה', tasks: 'משימה חדשה', family: 'הוספת בן או בת בית' }[t] || 'הוספה');
 }
 addEventListener('popstate', () => go(location.hash.slice(1) || 'home', false));
+function setView(v) { document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + v; }
+function movePill() {
+  const bar = $('#tabbar'), on = $('.tab.on', bar), pill = $('.tab-pill', bar); if (!on || !pill || bar.hidden) return;
+  pill.style.width = on.offsetWidth + 'px'; pill.style.height = on.offsetHeight + 'px';
+  pill.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`; pill.classList.add('ready');
+}
+addEventListener('resize', movePill);
+addEventListener('scroll', () => $('.topbar').classList.toggle('scrolled', scrollY > 8), { passive: true });
 
 function refresh() {
   if (!S.code) return;
@@ -345,7 +342,7 @@ homeView.body = () => {
   return `<section class="hello">
     <p class="date">יום ${DAYS[new Date().getDay()]}, ${new Date().toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}</p>
     <h1>${greet}${m ? `, ${esc(m.name)}` : ''} <span class="wave">${m ? esc(m.emoji) : '👋'}</span></h1>
-    <p class="sub">${lines[new Date().getDate() % lines.length]}</p></section>
+    <p class="sub">${lines[new Date().getDate() % lines.length]}</p><img src="logo.svg" alt="" class="hello-art" width="96" height="96"></section>
   <div class="stats">
     <button class="stat ring-card" data-go="tasks" aria-label="התקדמות היום: ${pct} אחוז. מעבר למשימות">
       <div class="ring" style="--p:${pct}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bgc" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42"/></svg><b>${pct}%</b></div>
@@ -566,7 +563,7 @@ familyView.body = () => {
     ${ms.map((m, i) => `<div class="member ${pop('m' + m.id)}" style="--i:${i}">${avatar(m, 'lg')}<div class="nm"><b>${esc(m.name)}${m.id === S.meId ? '<span class="me-tag">אני</span>' : ''}</b><small>⭐ ${wp[m.id] || 0} השבוע · ✅ ${done[m.id] || 0} משימות בסך הכל</small></div><button class="link-btn" data-act="edit-member" data-id="${m.id}" aria-label="עריכת ${esc(m.name)}">✏️</button></div>`).join('')}</section>
   <section class="card settings"><h2 style="margin-bottom:4px">⚙️ הגדרות</h2>
     <button class="set-row" data-act="whoami"><span class="e">🙋</span><span>מי אני במכשיר הזה?<small>כרגע: ${esc(me()?.name || 'לא נבחר')}</small></span><span aria-hidden="true">←</span></button>
-    <button class="set-row" data-act="a11y"><span class="e">♿</span><span>נגישות<small>גודל טקסט, מצב כהה, ניגודיות, עצירת אנימציות</small></span><span aria-hidden="true">←</span></button>
+    <button class="set-row" data-act="a11y"><span class="e">♿</span><span>נגישות<small>גודל טקסט, ניגודיות, גופן קריא, עצירת אנימציות</small></span><span aria-hidden="true">←</span></button><button class="set-row" data-act="theme"><span class="e">🌗</span><span>מצב כהה / בהיר<small>החלפת צבעי התצוגה</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="templates"><span class="e">💡</span><span>רעיונות למשימות<small>חבילת משימות מוכנות לפי חדרים</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="backup"><span class="e">💾</span><span>הורדת גיבוי<small>קובץ JSON עם כל הנתונים של הבית</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="leave"><span class="e">🚪</span><span>יציאה מהבית במכשיר הזה<small>${CLOUD ? 'הנתונים נשארים אצל שאר בני הבית' : 'שימו לב: במצב מקומי הנתונים יימחקו'}</small></span><span aria-hidden="true">←</span></button>
@@ -621,21 +618,43 @@ function backup() {
 
 /* ----- ONBOARDING ----- */
 function onboarding(joinCode) {
-  $('#tabbar').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם';
+  $('#tabbar').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
+  const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'lav'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'pink']];
   main.innerHTML = `<div class="view onb">
-    <img src="icon.svg" alt="הלוגו של Nestly" class="hero-logo" width="110" height="110">
-    <h1>ברוכים הבאים ל-Nestly 🏡</h1>
-    <p class="lead">כל משימות הבית ורשימת הקניות במקום אחד, משותף לכל בני הבית. עם תורנויות, נקודות וקצת קונפטי 🎉</p>
-    <div class="features"><div><b>🧹</b>משימות קבועות שחוזרות לבד</div><div><b>🛒</b>רשימת קניות לפי מחלקות</div><div><b>🔄</b>תורנויות הוגנות</div><div><b>🏆</b>נקודות ואלופי השבוע</div></div>
-    <div class="btns"><button class="btn primary wide" data-act="create">✨ פתיחת בית חדש</button>
-    ${CLOUD ? '<button class="btn soft wide" data-act="join">🔑 יש לי קוד הצטרפות</button>' : '<div class="note">🔒 מצב מקומי: הנתונים נשמרים במכשיר הזה. לשיתוף עם בני הבית צריך לחבר את Supabase לפי ה-README.</div>'}</div>
-    ${credit}</div>`;
+    <section class="onb-hero">
+      <div class="hero-badge" aria-hidden="true">
+        <img src="logo.svg" alt="" class="hero-logo" width="132" height="132">
+        <span class="orbit"><i>🧺</i><i>🧽</i><i>🛒</i><i>⭐</i></span>
+      </div>
+      <span class="eyebrow">✨ אפליקציית הבית המשותף</span>
+      <h1>הבית שלכם, <span class="grad-txt">מסודר ושמח</span></h1>
+      <p class="lead">כל משימות הבית ורשימת הקניות במקום אחד, משותף לכל בני הבית. מצטרפים בקוד או בקישור, בלי הרשמה ובלי סיסמה.</p>
+      <div class="btns"><button class="btn primary wide" data-act="create">🏡 פתיחת בית חדש</button>
+      ${CLOUD ? '<button class="btn soft wide" data-act="join">🔑 יש לי קוד הצטרפות</button>' : '<div class="note">🔒 מצב מקומי: הנתונים נשמרים במכשיר הזה. לשיתוף עם בני הבית צריך לחבר את Supabase לפי ה-README.</div>'}
+      <button class="link-btn" data-act="help">💡 איך זה עובד?</button></div>
+    </section>
+    <section class="features">${feats.map(([e, t, d, c], i) => `<div class="feat c-${c}" style="--i:${i}"><span class="fe">${e}</span><b>${t}</b><small>${d}</small></div>`).join('')}</section>
+    <section class="steps card"><h2>🚀 שלושה צעדים וזהו</h2>
+      <ol><li><span>1</span><div><b>פותחים בית</b><small>נותנים לו שם ובוחרים דמות</small></div></li>
+      <li><span>2</span><div><b>מזמינים את בני הבית</b><small>קוד, קישור או QR בוואטסאפ</small></div></li>
+      <li><span>3</span><div><b>מסמנים וי ומקבלים נקודות</b><small>והבית נשאר מסודר לבד</small></div></li></ol></section>
+  </div>`;
   if (joinCode && CLOUD) joinSheet(joinCode);
+}
+function helpSheet() {
+  sheet(`<h2 id="sheet-title">💡 איך Nestly עובד?</h2>
+  <div class="help">
+    <div><span class="e">🏡</span><p><b>בית אחד לכולם</b><br><small class="muted">פותחים בית ומשתפים את הקוד. כל מי שנכנס רואה את אותן משימות ואותה רשימה.</small></p></div>
+    <div><span class="e">✅</span><p><b>מסמנים וי</b><br><small class="muted">לחיצה על העיגול מסמנת משימה כבוצעה, נותנת נקודות ומעבירה את התור.</small></p></div>
+    <div><span class="e">🛒</span><p><b>מוסיפים לקניות</b><br><small class="muted">כותבים כמה פריטים עם פסיקים או אומרים בקול, והכל מסתדר לפי מחלקות.</small></p></div>
+    <div><span class="e">♿</span><p><b>נגישות ומצב כהה</b><br><small class="muted">כפתור הירח מחליף מצב תצוגה. את כפתור הנגישות העגול אפשר לגרור לכל מקום.</small></p></div>
+  </div>
+  <div class="actions" style="margin-top:16px"><button type="button" class="btn primary" data-act="close">יאללה, הבנתי</button><button type="button" class="btn soft" data-act="to-faq">❓ לשאלות נפוצות</button></div>`);
 }
 function createSheet() {
   let emo = AVATARS[0];
   sheet(`<h2 id="sheet-title">✨ בית חדש</h2><form class="form" id="f" novalidate>
-    <label class="field"><span>איך קוראים לבית?</span><input name="home" maxlength="30" placeholder="למשל: הבית של משפחת עדיבי" required></label>
+    <label class="field"><span>איך קוראים לבית?</span><input name="home" maxlength="30" placeholder="למשל: הבית של משפחת לוי" required></label>
     <label class="field"><span>ואיך קוראים לך?</span><input name="name" maxlength="24" placeholder="השם שלך" required></label>
     <fieldset><legend>בחרו דמות</legend>${emojiGrid(AVATARS, emo)}</fieldset>
     <label class="switch-row" style="cursor:pointer"><span><b>💡 להוסיף משימות בית מומלצות</b><br><small class="muted">כלים, כביסה, שאיבה, מצעים ועוד. אפשר לערוך אחר כך</small></span><input type="checkbox" name="starter" checked style="width:24px;height:24px;accent-color:var(--lav-d)"></label>
@@ -693,16 +712,16 @@ document.addEventListener('click', e => {
       g.dispatchEvent(new CustomEvent('chip', { bubbles: true, detail: { group: name, val } }));
     }
   }
-  const sw = e.target.closest('[data-sw]');
-  if (sw) { const k = sw.dataset.sw, v = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', v); A[k] = v; saveA(); return; }
   const g = e.target.closest('[data-go]');
   if (g) { closeSheet(); go(g.dataset.go); return; }
   const a = e.target.closest('[data-act]'); if (!a) return;
   const id = a.dataset.id;
   switch (a.dataset.act) {
     case 'close': closeSheet(); break;
-    case 'a11y': a11ySheet(); break;
-    case 'a11y-reset': A = {}; saveA(); a11ySheet(); break;
+    case 'help': helpSheet(); break;
+    case 'a11y': { const k = $('.nk-tab'); if (k) { k.scrollIntoView?.({ block: 'nearest' }); if (k.getAttribute('aria-expanded') !== 'true') k.click(); } break; }
+    case 'theme': $('[data-nk-theme]')?.click(); break;
+    case 'to-faq': closeSheet(); if (S.code && tab !== 'home') go('home'); setTimeout(() => { const f = $('#faq'); if (f) { f.hidden = false; f.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth' }); } }, 260); break;
     case 'create': createSheet(); break;
     case 'join': joinSheet(); break;
     case 'fab':
@@ -756,7 +775,7 @@ document.addEventListener('click', e => {
 
 /* ---------- start ---------- */
 function start() {
-  $('#tabbar').hidden = false;
+  $('#tabbar').hidden = false; requestAnimationFrame(movePill);
   go(location.hash.slice(1) || 'home', false);
   sync();
 }
@@ -767,4 +786,4 @@ if (S.code && (!joinParam || joinParam.toUpperCase() === S.code)) { if (joinPara
 else if (S.code && joinParam) { start(); sheet(`<h2 id="sheet-title">🏡 קישור לבית אחר</h2><p>כבר יש לך בית במכשיר הזה (${esc(homeName())}). כדי להצטרף לבית אחר צריך קודם לצאת מהבית הנוכחי בהגדרות.</p><div class="actions"><button class="btn primary" data-act="close">הבנתי</button></div>`); history.replaceState(null, '', location.pathname + '#home'); }
 else { onboarding(joinParam); setSync('local'); }
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { });
+

@@ -5,36 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nestly · הבית המשותף שלנו</title>
 <meta name="description" content="Nestly: משימות הבית ורשימת קניות משותפת לכל בני הבית, עם קוד הצטרפות, תורנויות, נקודות ואנימציות.">
-<meta name="theme-color" content="#c9b8ff">
+<meta name="theme-color" content="#FFF4EF">
 <meta name="color-scheme" content="light dark">
+<meta name="application-name" content="Nestly">
+<meta name="apple-mobile-web-app-title" content="Nestly">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Nestly · הבית המשותף שלנו">
+<meta property="og:description" content="משימות הבית ורשימת קניות משותפת לכל בני הבית">
+<meta property="og:image" content="icon-512.png">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script>(function(){try{var t=JSON.parse(localStorage.getItem('noya-kit:theme'));if(!t&&matchMedia('(prefers-color-scheme: dark)').matches)t='dark';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
 </head>
 <body>
 <a class="skip" href="#main">דילוג לתוכן הראשי</a>
-<div class="blobs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<div class="bg" aria-hidden="true">
+  <div class="blobs"><span></span><span></span><span></span><span></span></div>
+  <span class="spark s1">✦</span><span class="spark s2">✦</span><span class="spark s3">✦</span><span class="spark s4">✦</span><span class="spark s5">✦</span>
+  <span class="floaty f1">🧺</span><span class="floaty f2">🫧</span><span class="floaty f3">🛒</span><span class="floaty f4">🪴</span>
+</div>
 
 <header class="topbar">
   <button class="brand" data-go="home" aria-label="Nestly, מעבר לדף הבית">
-    <img src="icon.svg" alt="" width="40" height="40" class="logo">
+    <span class="logo-wrap"><img src="logo.svg" alt="" width="44" height="44" class="logo"></span>
     <span class="brand-txt"><b>Nestly</b><small id="home-name"></small></span>
   </button>
   <div class="top-actions">
     <span class="sync" id="sync" role="status" aria-live="polite"><i></i><span>מקומי</span></span>
-    <button class="icon-btn" data-act="a11y" aria-label="הגדרות נגישות">♿</button>
+    <button class="icon-btn" type="button" data-act="help" aria-label="איך זה עובד">💡</button>
+    <button class="icon-btn theme-btn" type="button" data-nk-theme><span data-nk-icon>🌙</span></button>
   </div>
 </header>
 
 <main id="main" tabindex="-1"></main>
 
+<footer class="site-foot">
+  <div class="foot-card">
+    <img src="logo.svg" alt="" width="54" height="54">
+    <p class="foot-t"><b>Nestly</b> · הבית המשותף שלכם, מסודר ושמח 💜</p>
+    <p class="foot-links">
+      <a href="https://github.com/NoyaAdivi/nestly" target="_blank" rel="noopener">⭐ GitHub</a>
+      <a href="https://noyaadivi.github.io/noya-website" target="_blank" rel="noopener">🌸 עוד פרויקטים שלי</a>
+      <button type="button" data-act="help">💡 איך זה עובד</button>
+    </p>
+    <p class="built-by">נבנה על ידי <a href="https://www.linkedin.com/in/noya-adivi/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.73V1.73C24 .77 23.21 0 22.23 0z"/></svg>נויה אדיבי</a></p>
+  </div>
+</footer>
+
 <button class="fab" id="fab" data-act="fab" aria-label="הוספה" hidden><span>+</span></button>
 
 <nav class="tabbar" id="tabbar" aria-label="ניווט ראשי" hidden>
+  <span class="tab-pill" aria-hidden="true"></span>
   <button class="tab" data-go="home"><span class="ico">🏡</span><span>בית</span></button>
   <button class="tab" data-go="tasks"><span class="ico">🧹</span><span>משימות</span><em class="badge" id="b-tasks" hidden></em></button>
   <button class="tab" data-go="shop"><span class="ico">🛒</span><span>קניות</span><em class="badge" id="b-shop" hidden></em></button>
@@ -55,5 +82,9 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" defer></script>
 <script src="config.js"></script>
 <script src="app.js" defer></script>
+<script src="noya-kit.js" defer></script>
+<script src="faq.js" defer></script>
+<script src="noya-app.js" data-sw="sw.js" data-repo="https://github.com/NoyaAdivi/nestly" data-before=".site-foot" defer></script>
+<script src="fx.js" data-burst=".btn.primary, .fab" defer></script>
 </body>
 </html>

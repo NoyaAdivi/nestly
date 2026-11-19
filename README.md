@@ -30,7 +30,8 @@ Household chores and a shared shopping list for the whole family. Everyone joins
 - 📤 **Send the list** on WhatsApp, through the share menu or as copied text
 - ↩️ **Undo everywhere**: completing, deleting and clearing can all be undone
 - 🎉 **Delight**: confetti, pastel animations and emoji throughout
-- ♿ **Accessible**: text size, dark mode, high contrast, readable font, stop animations, keyboard and screen reader support
+- ♿ **Accessible**: a draggable accessibility button (text size, high contrast, readable font, big cursor, grayscale, stop animations), a dark mode toggle, keyboard and screen reader support
+- ❓ **FAQ and help**: searchable questions by topic and a quick "how it works" guide
 - 📲 **Installable app (PWA)**: add to the home screen, works offline and syncs when back online
 - 💾 **Backup**: download all the household data as a JSON file
 
@@ -63,10 +64,16 @@ nestly/
 ├── styles.css            pastel design, animations, dark mode, accessibility modes
 ├── app.js                all logic: chores, shopping, members, sync, onboarding
 ├── config.js             Supabase URL and anon key
+├── noya-kit.js           draggable accessibility button + dark mode (shared by all my sites)
+├── noya-app.js           FAQ by topic, install as app, scroll progress (shared)
+├── fx.js                 scroll reveals, ripples, sparkle bursts (shared)
+├── faq.js                Nestly's FAQ questions and answers
 ├── supabase.sql          tables, security and functions (run once)
 ├── sw.js                 offline Service Worker
 ├── manifest.webmanifest  installable app settings
 ├── icon.svg              logo
+├── logo.svg              animated logo
+├── icon-180.png          app icon (iPhone)
 ├── icon-192.png          app icon
 ├── icon-512.png          app icon
 └── nestly.png            screenshot
