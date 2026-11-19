@@ -53,7 +53,8 @@
         <li><a href="app.js"><b>Recurring</b></a>: daily, chosen weekdays, every X days or monthly</li>
         <li>A finished chore <b>jumps to its next date</b> by itself</li>
         <li><b>Fair rotation</b>: passes to the next family member each time</li>
-        <li><b>Tag who does it</b>: tap the avatar on any chore to assign it</li>
+        <li><b>Tag who does it</b>: tap "Tag" on any chore to assign it</li>
+        <li><b>Your own rooms</b>: garden, car, kids room... edit, add or remove</li>
         <li><b>30 ready-made chores</b> grouped by room, one tap to add</li>
       </ul>
     </td>
@@ -63,6 +64,7 @@
         <li>Items <b>sort themselves by aisle</b>, with quantity and notes</li>
         <li><b>Add many at once</b> with commas (milk, eggs, bread) or <b>by voice</b> 🎤</li>
         <li><b>Who added what</b>, a <b>photo of the product</b> and a chosen aisle</li>
+        <li><b>Import a whole list</b> from a photo (even handwriting), a PDF or Word file, or pasted text</li>
         <li><b>Recommended list</b> by aisle and <b>"buy again"</b> suggestions</li>
         <li><b>Send the list</b> on WhatsApp, the share menu or as text</li>
       </ul>

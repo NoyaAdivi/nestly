@@ -41,12 +41,32 @@ function ago(iso) {
 }
 
 /* ---------- data dictionaries ---------- */
-const ROOMS = [
+const BASE_ROOMS = [
   { id: 'kitchen', e: '🍳', n: 'מטבח' }, { id: 'living', e: '🛋️', n: 'סלון' }, { id: 'bath', e: '🛁', n: 'אמבטיה' },
   { id: 'laundry', e: '🧺', n: 'כביסה' }, { id: 'bedroom', e: '🛏️', n: 'חדרים' }, { id: 'outdoor', e: '🌿', n: 'מרפסת וחצר' },
   { id: 'pets', e: '🐾', n: 'חיות' }, { id: 'general', e: '🏠', n: 'כללי' }
 ];
-const room = id => ROOMS.find(r => r.id === id) || ROOMS[7];
+/* rooms: the defaults, edited or hidden by the household, plus rooms they added */
+function rooms() {
+  const recs = {}; rows('room').forEach(r => recs[r.id] = r);
+  const base = BASE_ROOMS.map((r, i) => ({ order: i, ...r, ...(recs[r.id] || {}) }));
+  const extra = Object.values(recs).filter(r => !BASE_ROOMS.some(b => b.id === r.id));
+  return [...base, ...extra].filter(r => !r.hidden).sort((a, b) => (a.id === 'general') - (b.id === 'general') || (a.order ?? 50) - (b.order ?? 50));
+}
+const room = id => rooms().find(r => r.id === id) || rooms().find(r => r.id === 'general') || BASE_ROOMS[7];
+const ROOM_EMOJIS = ['🍳', '🛋️', '🛁', '🚽', '🧺', '🛏️', '🧸', '👶', '💻', '📚', '🌳', '🌿', '🌻', '🪴', '🚗', '🏊', '🐾', '🐕', '🐈', '🍽️', '🚪', '🏢', '🧰', '🎮', '🏋️', '🎨', '🪟', '🏠', '🏡', '⭐'];
+const ROOM_PRESETS = [
+  { id: 'garden', e: '🌳', n: 'גינה', t: [['השקיית הגינה', '💧', { type: 'interval', every: 2 }, 1], ['כיסוח הדשא', '🌱', { type: 'weekly', days: [5] }, 3], ['גיזום שיחים', '✂️', { type: 'monthly' }, 2], ['איסוף עלים', '🍂', { type: 'weekly', days: [5] }, 2]] },
+  { id: 'car', e: '🚗', n: 'רכב', t: [['שטיפת הרכב', '🧽', { type: 'interval', every: 14 }, 2], ['ניקוי פנים הרכב', '🧹', { type: 'monthly' }, 2], ['בדיקת לחץ אוויר', '🛞', { type: 'monthly' }, 1]] },
+  { id: 'kids', e: '🧸', n: 'חדר ילדים', t: [['סידור צעצועים', '🧸', { type: 'daily' }, 1], ['החלפת מצעים לילדים', '🛏️', { type: 'weekly', days: [4] }, 2], ['מיון בגדים קטנים', '👕', { type: 'monthly' }, 2]] },
+  { id: 'office', e: '💻', n: 'חדר עבודה', t: [['סידור השולחן', '🗂️', { type: 'weekly', days: [4] }, 1], ['ניקוי אבק מהמחשב', '🖥️', { type: 'interval', every: 14 }, 1]] },
+  { id: 'dining', e: '🍽️', n: 'פינת אוכל', t: [['עריכת שולחן', '🍽️', { type: 'daily' }, 1], ['ניגוב השולחן והכיסאות', '🧽', { type: 'daily' }, 1]] },
+  { id: 'entry', e: '🚪', n: 'כניסה', t: [['סידור נעליים', '👟', { type: 'interval', every: 3 }, 1], ['ניקוי שטיח הכניסה', '🧹', { type: 'weekly', days: [5] }, 1]] },
+  { id: 'storage', e: '🧰', n: 'מחסן', t: [['סידור המחסן', '📦', { type: 'monthly' }, 3]] },
+  { id: 'pool', e: '🏊', n: 'בריכה', t: [['ניקוי הבריכה', '🫧', { type: 'weekly', days: [5] }, 3], ['בדיקת כלור', '🧪', { type: 'interval', every: 3 }, 1]] },
+  { id: 'toilet', e: '🚽', n: 'שירותי אורחים', t: [['ניקוי שירותי האורחים', '🚽', { type: 'weekly', days: [4] }, 2], ['החלפת מגבת ידיים', '🧻', { type: 'interval', every: 3 }, 1]] }
+];
+const allTpl = () => [...TEMPLATES, ...ROOM_PRESETS.flatMap(p => p.t.map(([title, emoji, repeat, effort]) => [p.id, title, emoji, repeat, effort]))];
 const POINTS = { 1: 5, 2: 10, 3: 20 };
 const AVATARS = ['🦊', '🐼', '🐨', '🐯', '🦁', '🐸', '🐵', '🦄', '🐙', '🐝', '🐱', '🐶', '🐰', '🐻', '🐧', '🦋', '🐢', '🦉', '🐳', '🌸'];
 const COLORS = ['lav', 'mint', 'peach', 'pink', 'sky', 'butter'];
@@ -307,7 +327,7 @@ function go(t, push = true) {
   if (!VIEWS[t]) t = 'home';
   tab = t; seen.clear();
   if (push && location.hash !== '#' + t) history.pushState(null, '', '#' + t);
-  $$('.tab').forEach(b => { const on = b.dataset.go === t; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
+  $$('.tab, .tnav').forEach(b => { const on = b.dataset.go === t; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
   setView(t); movePill();
   const v = VIEWS[t];
   main.innerHTML = `<div class="view">${v.shell ? v.shell() : '<div id="dyn"></div>'}</div>`;
@@ -325,6 +345,17 @@ function movePill() {
   pill.style.transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`; pill.classList.add('ready');
 }
 addEventListener('resize', movePill);
+/* swipe left or right on phones to move between the main pages */
+(() => {
+  const ORDER = ['home', 'tasks', 'shop', 'family']; let sx = 0, sy = 0, ok = false;
+  main.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; ok = S.code && !dlg.open && !e.target.closest('.chips, .rec-cats, input, textarea, select, .add-bar'); }, { passive: true });
+  main.addEventListener('touchend', e => {
+    if (!ok) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) < 80 || Math.abs(dy) > 50) return;
+    const i = ORDER.indexOf(tab) + (dx < 0 ? 1 : -1); if (i < 0 || i >= ORDER.length) return;
+    main.dataset.slide = dx < 0 ? 'next' : 'prev'; go(ORDER[i]); setTimeout(() => delete main.dataset.slide, 450);
+  }, { passive: true });
+})();
 addEventListener('scroll', () => $('.topbar').classList.toggle('scrolled', scrollY > 8), { passive: true });
 
 function refresh() {
@@ -335,6 +366,7 @@ function refresh() {
   const bt = $('#b-tasks'), bs = $('#b-shop');
   bt.hidden = !lateOrToday; bt.textContent = lateOrToday; bt.setAttribute('aria-label', `${lateOrToday} משימות להיום`);
   bs.hidden = !shopN; bs.textContent = shopN; bs.setAttribute('aria-label', `${shopN} פריטים לקנייה`);
+  $$('[data-tb]').forEach(x => { const n = x.dataset.tb === 'tasks' ? lateOrToday : shopN; x.hidden = !n; x.textContent = n; });
   const dyn = $('#dyn'); if (dyn) dyn.innerHTML = VIEWS[tab].body();
   if (tab === 'family') drawQR();
 }
@@ -377,7 +409,8 @@ homeView.body = () => {
 /* ----- TASKS ----- */
 let tFilter = 'week', tRoom = 'all', showDone = false;
 function tasksView() { }
-tasksView.shell = () => `<div class="page-h"><h1>🧹 משימות הבית</h1><button class="btn soft" data-act="templates" style="min-height:42px;padding:0 14px">💡 רעיונות</button></div><div id="dyn"></div>`;
+tasksView.shell = () => `<div class="page-h"><h1>🧹 משימות הבית</h1><div class="page-btns"><button class="btn soft rec-btn" data-act="rooms" style="min-height:42px;padding:0 14px">🏠<span class="bt"> החדרים</span></button><button class="btn soft" data-act="templates" style="min-height:42px;padding:0 14px">💡<span class="bt"> רעיונות</span></button></div></div>
+  <p class="tag-tip">🏷️ כדי לתייג מי עושה משימה, לוחצים על הכפתור "תיוג" שבצד של המשימה</p><div id="dyn"></div>`;
 tasksView.body = () => {
   const td = today(), all = activeTasks();
   const F = { today: t => t.due && t.due <= td, week: t => !t.due || t.due <= addDays(td, 6), mine: t => isMine(t), all: () => true };
@@ -385,7 +418,7 @@ tasksView.body = () => {
   let list = all.filter(F[tFilter]).filter(t => tRoom === 'all' || t.room === tRoom);
   list.sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.title.localeCompare(b.title, 'he'));
   const groups = [['late', '⏰ באיחור', t => t.due && t.due < td], ['today', '☀️ היום', t => t.due === td], ['tomorrow', '🌙 מחר', t => t.due === addDays(td, 1)], ['later', '📅 בהמשך', t => t.due && t.due > addDays(td, 1)], ['none', '🗂️ בלי תאריך', t => !t.due]];
-  const roomsUsed = ROOMS.filter(r => all.some(t => t.room === r.id));
+  const roomsUsed = rooms().filter(r => all.some(t => t.room === r.id));
   const done = rows('task').filter(t => t.done).sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || '')).slice(0, 15);
   let i = 0;
   const groupsHtml = groups.map(([k, n, fn]) => { const g = list.filter(fn); return g.length ? `<h3 class="group-t ${k === 'late' ? 'late' : ''}">${n} <span class="n">${g.length}</span></h3><ul class="list">${g.map(t => taskCard(t, i++)).join('')}</ul>` : ''; }).join('');
@@ -405,7 +438,7 @@ function taskCard(t, i = 0) {
       <span class="t-txt"><b>${esc(t.title)}</b><span class="meta">
         ${t.done ? `<span>✅ הושלם ${ago(t.doneAt)}</span>` : `<span class="${d.c}">${d.t}</span>`}
         <span>${r.e} ${r.n}</span>${rep ? `<span>🔁 ${rep}</span>` : ''}${t.assignee === 'rotate' ? '<span>🔄 תורנות</span>' : ''}<span>⭐ ${POINTS[t.effort] || 10}</span></span>${whoLine(t, o)}</span>
-    </button><button class="who-btn" data-act="assign" data-id="${t.id}" aria-label="מי עושה את המשימה? כרגע: ${o ? esc(o.name) : 'מי שפנוי'}">${avatar(o)}<small>${o ? esc(o.name) : 'פנוי'}</small></button></li>`;
+    </button><button class="who-btn ${o ? '' : 'empty'}" data-act="assign" data-id="${t.id}" aria-label="תיוג מי עושה את המשימה. כרגע: ${o ? esc(o.name) : 'מי שפנוי'}" title="תיוג מי עושה">${o ? avatar(o) : '<span class="av tag-av" aria-hidden="true">🏷️</span>'}<small>${o ? esc(o.name) : 'תיוג'}</small></button></li>`;
 }
 function whoLine(t, o) {
   const by = member(t.done ? t.doneBy : t.lastBy);
@@ -443,7 +476,7 @@ function taskSheet(id, preset) {
       <input name="title" maxlength="60" value="${esc(t.title)}" placeholder="למשל: לתלות כביסה" autocomplete="off" required></div></label>
     <div id="emo-box" hidden>${emojiGrid(TASK_EMOJIS, emo)}</div>
     <p class="err" id="err" aria-live="assertive"></p>
-    <fieldset><legend>איפה בבית?</legend>${chips('room', ROOMS.map(r => [r.id, `${r.e} ${r.n}`]), t.room)}</fieldset>
+    <fieldset><legend>איפה בבית?</legend>${chips('room', rooms().map(r => [r.id, `${r.e} ${r.n}`]), t.room)}<button type="button" class="link-btn" data-act="rooms" style="margin-top:6px">🏠 הוספה או עריכה של חדרים</button></fieldset>
     <fieldset><legend>👤 מי עושה את המשימה?</legend>${chips('as', [['any', '👐 מי שפנוי'], ['rotate', '🔄 תורנות'], ...ms.map(m => [m.id, `${esc(m.emoji)} ${esc(m.name)}`])], t.assignee)}</fieldset>
     <fieldset><legend>כל כמה זמן?</legend>${chips('rep', [['none', 'פעם אחת'], ['daily', 'כל יום'], ['weekly', 'כל שבוע'], ['interval', 'כל כמה ימים'], ['monthly', 'כל חודש']], t.repeat.type)}
       <div data-show="weekly">${chips('days', DSH.map((d, i) => [String(i), d]), (t.repeat.days || []).map(String), true, 'days')}<small class="muted">אפשר לבחור כמה ימים</small></div>
@@ -474,9 +507,9 @@ function taskSheet(id, preset) {
 function templatesSheet() {
   const have = new Set(rows('task').map(t => t.title));
   sheet(`<h2 id="sheet-title">💡 רעיונות למשימות</h2><p class="muted" style="margin-top:-8px">לוחצים על משימה כדי להוסיף אותה לבית. אפשר לערוך אותה אחר כך.</p>
-  ${ROOMS.map(r => { const ts = TEMPLATES.map((x, i) => [x, i]).filter(([x]) => x[0] === r.id); return ts.length ? `<div class="tpl-room"><h3 class="group-t" style="margin:8px 0 2px">${r.e} ${r.n}</h3>${ts.map(([x, i]) => { const a = have.has(x[1]); return `<button type="button" class="tpl ${a ? 'added' : ''}" data-act="add-tpl" data-i="${i}" ${a ? 'aria-disabled="true"' : ''}><span class="e" aria-hidden="true">${x[2]}</span><span>${x[1]}<br><small>${repeatLabel(x[3]) || 'פעם אחת'} · ⭐ ${POINTS[x[4]]}</small></span><b aria-hidden="true">${a ? '✓' : '➕'}</b></button>`; }).join('')}</div>` : ''; }).join('')}`);
+  ${rooms().map(r => { const ts = allTpl().map((x, i) => [x, i]).filter(([x]) => x[0] === r.id); return ts.length ? `<div class="tpl-room"><h3 class="group-t" style="margin:8px 0 2px">${r.e} ${r.n}</h3>${ts.map(([x, i]) => { const a = have.has(x[1]); return `<button type="button" class="tpl ${a ? 'added' : ''}" data-act="add-tpl" data-i="${i}" ${a ? 'aria-disabled="true"' : ''}><span class="e" aria-hidden="true">${x[2]}</span><span>${x[1]}<br><small>${repeatLabel(x[3]) || 'פעם אחת'} · ⭐ ${POINTS[x[4]]}</small></span><b aria-hidden="true">${a ? '✓' : '➕'}</b></button>`; }).join('')}</div>` : ''; }).join('')}`);
 }
-function tplTask(i) { const [r, title, emoji, repeat, effort] = TEMPLATES[i]; return { id: uid(), title, emoji, room: r, assignee: 'any', repeat: clone(repeat), due: today(), effort, notes: '', created: Date.now() }; }
+function tplTask(i) { const [r, title, emoji, repeat, effort] = allTpl()[i]; return { id: uid(), title, emoji, room: r, assignee: 'any', repeat: clone(repeat), due: today(), effort, notes: '', created: Date.now() }; }
 
 /* ----- SHOP ----- */
 let qty = 1, rec2 = null;
@@ -486,10 +519,11 @@ shopView.shell = () => `<div class="page-h"><h1>🛒 רשימת קניות</h1><
   <form class="add-bar" id="add-item" autocomplete="off">
     <label class="sr" for="item-in">מה צריך לקנות?</label>
     <input id="item-in" placeholder="מה צריך לקנות? 🥑" maxlength="80" enterkeyhint="done">
-    ${SR ? '<button type="button" class="mic" data-act="mic" aria-label="הוספה בקול">🎤</button>' : ''}
+    ${SR ? '<button type="button" class="mic" data-act="mic" aria-label="הוספה בקול">🎤</button>' : ''}<button type="button" class="mic" data-act="import" aria-label="הוספה מתמונה, מסמך או טקסט">📷</button>
     <div class="qty" role="group" aria-label="כמות"><button type="button" data-act="q" data-d="-1" aria-label="הפחתת כמות">−</button><output id="q-out" aria-live="polite">1</output><button type="button" data-act="q" data-d="1" aria-label="הוספת כמות">+</button></div>
     <button class="btn primary" aria-label="הוספה לרשימה">➕</button>
   </form>
+  <div class="shop-tools"><button type="button" class="tool-btn" data-act="import" data-m="image">📸 רשימה מתמונה או כתב יד</button><button type="button" class="tool-btn" data-act="import" data-m="doc">📄 ממסמך</button><button type="button" class="tool-btn" data-act="import" data-m="text">✍️ הדבקת טקסט</button><button type="button" class="tool-btn" data-act="import" data-m="photo-item">🖼️ פריט עם תמונה</button></div>
   <div class="cat-pick"><label for="cat-sel">🗂️ מחלקה:</label><select id="cat-sel"><option value="">🪄 אוטומטית</option>${CAT_ORDER.map(cat).map(c => `<option value="${c.id}">${c.e} ${c.n}</option>`).join('')}</select><span id="cat-guess" class="muted" aria-live="polite"></span></div><div id="dyn"></div>`;
 shopView.mount = () => {
   const inp0 = $('#item-in'), sel = $('#cat-sel'), guess = $('#cat-guess');
@@ -498,7 +532,7 @@ shopView.mount = () => {
   $('#add-item').onsubmit = e => {
     e.preventDefault(); const inp = $('#item-in');
     const names = inp.value.split(/[,\n،]+/).map(s => s.trim()).filter(Boolean);
-    if (!names.length) { inp.focus(); return; }
+    if (!names.length) { importSheet(); return; }
     names.forEach(n => addItem(n, names.length > 1 ? 1 : qty, names.length > 1, sel.value || null));
     if (names.length > 1) toast(`🛒 ${names.length} פריטים נוספו לרשימה`);
     inp.value = ''; qty = 1; $('#q-out').textContent = 1; sel.value = ''; showGuess(); inp.focus();
@@ -587,6 +621,32 @@ function assignSheet(id) {
     <button class="set-row" data-act="assign-new" data-id="${id}"><span class="e">✨</span><span><b>בן/בת בית חדש/ה</b><small>להוסיף ולתייג מיד</small></span><span aria-hidden="true">←</span></button></div>`);
 }
 
+/* ----- rooms manager ----- */
+function roomsSheet() {
+  const rs = rooms(), used = id => rows('task').filter(t => !t.done && t.room === id).length;
+  const have = new Set(rs.map(r => r.id)), presets = ROOM_PRESETS.filter(p => !have.has(p.id));
+  const hiddenBase = BASE_ROOMS.filter(b => !have.has(b.id));
+  sheet(`<h2 id="sheet-title">🏠 החדרים בבית</h2><p class="muted" style="margin-top:-6px">מגדירים את הבית לפי מה שיש בו באמת. אפשר להוסיף, לשנות שם ואימוג׳י או להסיר.</p>
+    <div class="settings">${rs.map(r => `<div class="room-row"><span class="e" aria-hidden="true">${r.e}</span><span><b>${esc(r.n)}</b><small>${used(r.id) ? `${used(r.id)} משימות` : 'אין משימות עדיין'}</small></span>
+      <button type="button" class="link-btn" data-act="room-tasks" data-id="${r.id}" aria-label="משימה חדשה ב${esc(r.n)}">➕ משימה</button><button type="button" class="link-btn" data-act="room-edit" data-id="${r.id}" aria-label="עריכת ${esc(r.n)}">✏️</button></div>`).join('')}</div>
+    <div class="actions" style="margin-top:12px"><button type="button" class="btn primary" data-act="room-edit">➕ חדר או מקום חדש</button></div>
+    ${presets.length ? `<h3 class="group-t" style="margin:18px 0 6px">✨ הוספה מהירה, עם משימות מוצעות</h3><div class="chips">${presets.map(p => `<button type="button" class="chip" data-act="room-preset" data-id="${p.id}">${p.e} ${p.n}</button>`).join('')}</div>` : ''}
+    ${hiddenBase.length ? `<h3 class="group-t" style="margin:16px 0 6px">↩️ חדרים שהוסרו</h3><div class="chips">${hiddenBase.map(b => `<button type="button" class="chip" data-act="room-restore" data-id="${b.id}">${b.e} ${b.n}</button>`).join('')}</div>` : ''}`);
+}
+function roomEditSheet(id) {
+  const r = id ? room(id) : { e: '🌳', n: '' }; let emo = r.e;
+  const n = id ? rows('task').filter(t => t.room === id && !t.done).length : 0;
+  sheet(`<h2 id="sheet-title">${id ? '✏️ עריכת חדר' : '➕ חדר או מקום חדש'}</h2><form class="form" id="f" novalidate>
+    <label class="field"><span>שם</span><input name="n" maxlength="24" value="${esc(r.n)}" placeholder="למשל: גינה, חדר של יואב, רכב" required></label>
+    <p class="err" id="err" aria-live="assertive"></p>
+    <fieldset><legend>אימוג׳י</legend>${emojiGrid(ROOM_EMOJIS, emo)}</fieldset>
+    <div class="actions"><button class="btn primary">💾 שמירה</button>${id && id !== 'general' ? `<button type="button" class="btn ghost danger" data-act="room-del" data-id="${id}">🗑️ הסרה${n ? ` (${n} משימות יעברו ל"כללי")` : ''}</button>` : ''}<button type="button" class="btn ghost" data-act="rooms">↩️ חזרה</button></div></form>`, b => {
+    $('.emoji-grid', b).onclick = e => { const x = e.target.closest('[data-emo]'); if (!x) return; emo = x.dataset.emo; $$('[data-emo]', b).forEach(y => y.setAttribute('aria-pressed', y === x)); };
+    $('#f', b).onsubmit = e => { e.preventDefault(); const nm = e.target.n.value.trim(); if (!nm) { $('#err', b).textContent = 'צריך לתת שם 🙂'; return e.target.n.focus(); }
+      const rid = id || 'r' + uid(); put('room', { ...(rows('room').find(x => x.id === rid) || {}), id: rid, n: nm, e: emo, hidden: false, order: id ? room(id).order : 100 + rooms().length });
+      toast(`${esc(emo)} ${id ? 'החדר עודכן' : `"${esc(nm)}" נוסף לבית`}`); roomsSheet(); };
+  });
+}
 /* ----- legal and info pages (deep links: #accessibility #privacy #terms #contact) ----- */
 const UPDATED = '19.11.2026';
 const LEGAL = {
@@ -608,7 +668,7 @@ const LEGAL = {
     <p>אין צורך בהרשמה, באימייל או בטלפון, ואנחנו לא מבקשים מידע מזהה.</p>
     <h3>איפה המידע נשמר</h3><p>המידע נשמר במכשיר שלכם, ואם הבית מחובר לענן, גם במסד נתונים של Supabase. הגישה אליו אפשרית רק עם קוד הבית, וכל החוקים נאכפים בצד השרת.</p>
     <h3>מה אנחנו לא עושים</h3><ul><li>לא מוכרים ולא משתפים מידע עם אף אחד</li><li>אין פרסומות ואין כלי מעקב או אנליטיקה</li><li>אין עוגיות מעקב. האתר שומר רק העדפות כמו מצב כהה והגדרות נגישות</li></ul>
-    <h3>שירותים חיצוניים</h3><p>הגופנים נטענים מ־Google Fonts וספריית ה־QR מ־jsDelivr. שירותים אלה מקבלים את כתובת ה־IP שלכם כמו בכל אתר.</p>
+    <h3>שירותים חיצוניים</h3><p>הגופנים נטענים מ־Google Fonts, וספריות ה־QR, זיהוי הכתב וקריאת המסמכים נטענות מ־jsDelivr. שירותים אלה מקבלים את כתובת ה־IP שלכם כמו בכל אתר.</p><h3>תמונות ומסמכים</h3><p>כשמעלים תמונה או מסמך כדי להוסיף רשימה, הזיהוי נעשה בתוך הדפדפן שלכם. הקובץ עצמו לא נשלח לשום שרת ולא נשמר, רק הפריטים שאישרתם.</p>
     <h3>מחיקת מידע</h3><p>אפשר למחוק פריטים ומשימות בכל רגע, להוריד גיבוי מלא, או לצאת מהבית במכשיר דרך ההגדרות. למחיקת בית שלם מהענן אפשר לפנות אלינו.</p>
     <p class="muted">עודכן בתאריך ${UPDATED}</p>`],
   terms: ['📜 תנאי שימוש', () => `<p>ברוכים הבאים ל־Nestly. השימוש באתר מהווה הסכמה לתנאים הבאים.</p>
@@ -629,6 +689,111 @@ function legalSheet(k) {
     <nav class="legal-nav" aria-label="עמודי מידע">${Object.entries(LEGAL).filter(([x]) => x !== k).map(([x, v]) => `<a href="#${x}" data-act="legal" data-p="${x}">${v[0]}</a>`).join('')}</nav>
     <div class="actions"><button type="button" class="btn primary" data-act="close">👍 הבנתי</button></div>`);
   $('.sheet-card') && ($('.sheet-card').scrollTop = 0);
+}
+/* ----- import a whole list: text, photo (also handwriting) or document ----- */
+const loadScript = src => new Promise((ok, no) => { if ([...document.scripts].some(x => x.src === src)) return ok(); const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = () => no(new Error('load')); document.head.append(el); });
+const CDN = { ocr: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js', pdf: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs', pdfw: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs', docx: 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js' };
+function parseList(text) {
+  const out = [], seen = new Set();
+  String(text || '').split(/[\n\r,،;•·]+/).forEach(raw => {
+    let t = raw.replace(/^[\s\-\u2013*+.)\]☐☑✓✔□■●○◦>]+/, '').replace(/^\d+[.)]\s*/, '').replace(/[|_~`"“”]+/g, ' ').replace(/\s+/g, ' ').trim();
+    let q = 1, m = t.match(/^(\d{1,2})\s*(?:x|×|יח'?|יחידות)?\s+(.+)$/i) || null;
+    if (m) { q = +m[1]; t = m[2]; } else if ((m = t.match(/^(.+?)\s*(?:x|×)\s*(\d{1,2})$/i))) { t = m[1]; q = +m[2]; }
+    t = t.replace(/[^\p{L}\p{N}\s%'׳"״\-]/gu, '').trim();
+    if (!/[\p{L}]{2,}/u.test(t) || t.length > 40) return;
+    const k = t.toLowerCase(); if (seen.has(k)) return; seen.add(k);
+    out.push({ name: t, qty: Math.min(99, Math.max(1, q)) });
+  });
+  return out.slice(0, 60);
+}
+function importSheet(mode) {
+  if (mode === 'text') return sheet(`<h2 id="sheet-title">✍️ הדבקת רשימה</h2><p class="muted" style="margin-top:-6px">כותבים או מדביקים רשימה, למשל מוואטסאפ. כל שורה או פסיק הם פריט.</p>
+    <form class="form" id="f"><label class="field"><span class="sr">הרשימה</span><textarea name="t" rows="7" placeholder="חלב&#10;2 לחם&#10;עגבניות, מלפפונים&#10;סבון כלים" required></textarea></label>
+    <div class="actions"><button class="btn primary">👀 המשך לבדיקה</button><button type="button" class="btn ghost" data-act="import">↩️ חזרה</button></div></form>`, b => {
+      $('#f', b).onsubmit = e => { e.preventDefault(); const l = parseList(e.target.t.value); if (!l.length) return toast('🤔 לא מצאתי פריטים בטקסט'); reviewSheet(l, 'טקסט'); };
+    });
+  if (mode) return pickFile(mode);
+  sheet(`<h2 id="sheet-title">➕ מה רוצים להוסיף?</h2><p class="muted" style="margin-top:-6px">אפשר להוסיף פריט אחד בשורה למעלה, או רשימה שלמה בבת אחת:</p>
+    <div class="imp-grid">
+      <button type="button" class="imp" data-act="import" data-m="image"><span class="e">📸</span><b>תמונה או כתב יד</b><small>מצלמים רשימה על פתק או מעלים צילום מסך</small></button>
+      <button type="button" class="imp" data-act="import" data-m="doc"><span class="e">📄</span><b>מסמך</b><small>PDF, Word או קובץ טקסט</small></button>
+      <button type="button" class="imp" data-act="import" data-m="text"><span class="e">✍️</span><b>טקסט</b><small>מדביקים רשימה מוואטסאפ או מהפתקים</small></button>
+      <button type="button" class="imp" data-act="import" data-m="photo-item"><span class="e">🖼️</span><b>פריט עם תמונה</b><small>כדי שכולם יידעו בדיוק מה לקנות</small></button>
+      <button type="button" class="imp" data-act="recs"><span class="e">💡</span><b>רשימה מומלצת</b><small>בוחרים לפי מחלקות בסופר</small></button>
+      <button type="button" class="imp" data-act="close-focus"><span class="e">⌨️</span><b>פריט אחד</b><small>כותבים בשורה למעלה ולוחצים ➕</small></button>
+    </div>`);
+}
+function pickFile(mode) {
+  const inp = document.createElement('input'); inp.type = 'file';
+  inp.accept = mode === 'doc' ? '.pdf,.txt,.csv,.docx,image/*' : 'image/*';
+  inp.onchange = () => { const f = inp.files[0]; if (!f) return; mode === 'photo-item' ? photoItemSheet(f) : readFile(f); };
+  inp.click();
+}
+async function photoItemSheet(file) {
+  let photo = ''; try { photo = await shrinkPhoto(file); } catch { return toast('😕 לא הצלחתי לקרוא את התמונה'); }
+  sheet(`<h2 id="sheet-title">🖼️ פריט עם תמונה</h2><form class="form" id="f"><img class="photo-big" src="${photo}" alt="התמונה שנבחרה" style="max-height:38vh">
+    <label class="field"><span>מה זה?</span><input name="n" maxlength="80" placeholder="למשל: שמפו של יעל" required></label>
+    <div class="actions"><button class="btn primary">➕ הוספה לרשימה</button><button type="button" class="btn ghost" data-act="import" data-m="photo-item">🔁 תמונה אחרת</button></div></form>`, b => {
+    $('#f', b).onsubmit = e => { e.preventDefault(); const n = e.target.n.value.trim(); if (!n) return e.target.n.focus();
+      const it = { id: uid(), name: n.slice(0, 80), qty: 1, cat: guessCat(n), by: S.meId, at: Date.now(), photo }; put('shop', it); closeSheet(); toast(`📷 "${esc(n)}" נוסף עם תמונה`); };
+  });
+}
+function progressSheet(msg) {
+  sheet(`<h2 id="sheet-title">🔎 קוראים את הרשימה...</h2><p class="muted" id="ocr-msg" aria-live="polite">${msg}</p><div class="progress"><i id="ocr-bar" style="--w:4%"></i></div><p class="muted" style="font-size:.84rem">בפעם הראשונה זה לוקח קצת יותר זמן. הכל נעשה בדפדפן שלכם.</p>`);
+}
+const setProg = (p, msg) => { const b = $('#ocr-bar'); if (b) b.style.setProperty('--w', Math.round(p * 100) + '%'); if (msg && $('#ocr-msg')) $('#ocr-msg').textContent = msg; };
+async function prepImage(src) {
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; });
+  const k = Math.min(1, 2000 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+  c.width = img.width * k; c.height = img.height * k; const x = c.getContext('2d');
+  x.filter = 'grayscale(1) contrast(1.45) brightness(1.08)'; x.drawImage(img, 0, 0, c.width, c.height); return c;
+}
+async function ocr(canvases) {
+  await loadScript(CDN.ocr);
+  const w = await Tesseract.createWorker(['heb', 'eng'], 1, { logger: m => { if (m.status === 'recognizing text') setProg(.3 + m.progress * .7, '✍️ מזהים את הכתב...'); else setProg(.15, '⬇️ טוענים את כלי הזיהוי...'); } });
+  let text = ''; for (const c of canvases) text += '\n' + (await w.recognize(c)).data.text;
+  await w.terminate(); return text;
+}
+async function readFile(f) {
+  const name = f.name.toLowerCase();
+  progressSheet('📂 פותחים את הקובץ...');
+  try {
+    let text = '';
+    if (f.type.startsWith('image/')) { const url = URL.createObjectURL(f); text = await ocr([await prepImage(url)]); URL.revokeObjectURL(url); }
+    else if (name.endsWith('.txt') || name.endsWith('.csv')) text = await f.text();
+    else if (name.endsWith('.docx')) { setProg(.3, '📄 קוראים את המסמך...'); await loadScript(CDN.docx); text = (await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() })).value; }
+    else if (name.endsWith('.pdf')) {
+      setProg(.2, '📄 קוראים את ה־PDF...');
+      const pdfjs = await import(CDN.pdf); pdfjs.GlobalWorkerOptions.workerSrc = CDN.pdfw;
+      const doc = await pdfjs.getDocument({ data: await f.arrayBuffer() }).promise, pages = Math.min(doc.numPages, 5), scans = [];
+      for (let i = 1; i <= pages; i++) {
+        const pg = await doc.getPage(i), tc = await pg.getTextContent();
+        const lines = {}; tc.items.forEach(it => { const y = Math.round(it.transform[5]); (lines[y] = lines[y] || []).push(it.str); });
+        const t = Object.keys(lines).sort((a, b) => b - a).map(y => lines[y].join(' ')).join('\n');
+        if (t.trim().length > 3) text += '\n' + t;
+        else { const v = pg.getViewport({ scale: 2 }), c = document.createElement('canvas'); c.width = v.width; c.height = v.height; await pg.render({ canvasContext: c.getContext('2d'), viewport: v }).promise; scans.push(c); }
+      }
+      if (scans.length) text += await ocr(scans);
+    } else throw new Error('type');
+    const l = parseList(text);
+    if (!l.length) return sheet(`<h2 id="sheet-title">🤔 לא מצאתי פריטים</h2><p>לא הצלחתי לקרוא פריטים מהקובץ. כדאי לנסות תמונה חדה יותר, באור טוב, עם כתב ברור ושורה לכל פריט.</p><div class="actions"><button type="button" class="btn primary" data-act="import" data-m="image">📸 לנסות תמונה אחרת</button><button type="button" class="btn ghost" data-act="import" data-m="text">✍️ להקליד במקום</button></div>`);
+    reviewSheet(l, f.type.startsWith('image/') ? 'תמונה' : 'מסמך');
+  } catch (x) {
+    console.warn(x);
+    sheet(`<h2 id="sheet-title">😕 משהו לא הסתדר</h2><p>${x.message === 'type' ? 'אפשר להעלות תמונה, PDF, Word (docx) או קובץ טקסט.' : 'לא הצלחתי לקרוא את הקובץ. לזיהוי צריך חיבור לאינטרנט בפעם הראשונה.'}</p><div class="actions"><button type="button" class="btn primary" data-act="import">↩️ חזרה</button><button type="button" class="btn ghost" data-act="import" data-m="text">✍️ להקליד במקום</button></div>`);
+  }
+}
+function reviewSheet(list, src) {
+  sheet(`<h2 id="sheet-title">👀 זה מה שמצאתי</h2><p class="muted" style="margin-top:-6px">מצאתי ${list.length} פריטים ב${src}. אפשר לתקן שמות, לשנות כמות או להוריד סימון לפני ההוספה.</p>
+    <form id="f" class="form"><ul class="rev">${list.map((x, i) => `<li><input type="checkbox" checked aria-label="להוסיף את ${esc(x.name)}" data-i="${i}"><span class="e" aria-hidden="true">${cat(guessCat(x.name)).e}</span><input class="rn" value="${esc(x.name)}" maxlength="80" aria-label="שם הפריט"><input class="rq" type="number" min="1" max="99" value="${x.qty}" aria-label="כמות"></li>`).join('')}</ul>
+    <div class="actions"><button class="btn primary" id="rev-go">➕ להוסיף ${list.length} פריטים</button><button type="button" class="btn ghost" data-act="import">↩️ חזרה</button></div></form>`, b => {
+    const upd = () => { const n = $$('.rev input[type=checkbox]:checked', b).length; $('#rev-go', b).textContent = n ? `➕ להוסיף ${n} פריטים` : 'לא נבחרו פריטים'; $('#rev-go', b).disabled = !n; };
+    b.addEventListener('change', upd);
+    b.addEventListener('input', e => { if (e.target.classList.contains('rn')) e.target.parentElement.querySelector('.e').textContent = cat(guessCat(e.target.value)).e; });
+    $('#f', b).onsubmit = e => { e.preventDefault(); let n = 0;
+      $$('.rev li', b).forEach(li => { if (!$('input[type=checkbox]', li).checked) return; const nm = $('.rn', li).value.trim(); if (!nm) return; addItem(nm, Math.max(1, +$('.rq', li).value || 1), true); n++; });
+      closeSheet(); if (tab !== 'shop') go('shop'); confetti(innerWidth / 2, innerHeight / 3, 60); toast(`🛒 ${n} פריטים נוספו לרשימה`); };
+  });
 }
 const flash = id => setTimeout(() => $(`.item[data-id="${id}"]`)?.classList.add('flash'), 30);
 function itemSheet(id) {
@@ -692,6 +857,7 @@ familyView.body = () => {
   <section class="card settings"><h2 style="margin-bottom:4px">⚙️ הגדרות</h2>
     <button class="set-row" data-act="whoami"><span class="e">🙋</span><span>מי אני במכשיר הזה?<small>כרגע: ${esc(me()?.name || 'לא נבחר')}</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="a11y"><span class="e">♿</span><span>נגישות<small>גודל טקסט, ניגודיות, גופן קריא, עצירת אנימציות</small></span><span aria-hidden="true">←</span></button><button class="set-row" data-act="theme"><span class="e">🌗</span><span>מצב כהה / בהיר<small>החלפת צבעי התצוגה</small></span><span aria-hidden="true">←</span></button>
+    <button class="set-row" data-act="rooms"><span class="e">🏠</span><span>החדרים בבית<small>גינה, רכב, חדר ילדים... מגדירים את הבית לפי מה שיש</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="templates"><span class="e">💡</span><span>רעיונות למשימות<small>חבילת משימות מוכנות לפי חדרים</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="backup"><span class="e">💾</span><span>הורדת גיבוי<small>קובץ JSON עם כל הנתונים של הבית</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="leave"><span class="e">🚪</span><span>יציאה מהבית במכשיר הזה<small>${CLOUD ? 'הנתונים נשארים אצל שאר בני הבית' : 'שימו לב: במצב מקומי הנתונים יימחקו'}</small></span><span aria-hidden="true">←</span></button>
@@ -746,7 +912,7 @@ function backup() {
 
 /* ----- ONBOARDING ----- */
 function onboarding(joinCode) {
-  $('#tabbar').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
+  $('#tabbar').hidden = true; $('#topnav').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
   const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'sky'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'sky']];
   main.innerHTML = `<div class="view onb">
     <section class="onb-hero">
@@ -885,6 +1051,14 @@ document.addEventListener('click', e => {
     case 'clear-bought': { const b = rows('shop').filter(i => i.bought).map(clone); write(b.map(i => ['del', i.id])); toast(`🧹 ${b.length} פריטים נוקו`, { undo: () => write(b.map(i => ['shop', i])) }); break; }
     case 'share-list': shareList(); break;
     case 'photo': photoSheet(id); break;
+    case 'import': importSheet(a.dataset.m); break;
+    case 'rooms': roomsSheet(); break;
+    case 'room-edit': roomEditSheet(id); break;
+    case 'room-tasks': taskSheet(null, { room: id }); break;
+    case 'room-restore': { const r0 = rows('room').find(x => x.id === id) || { id }; put('room', { ...r0, hidden: false }); toast('↩️ החדר חזר'); roomsSheet(); break; }
+    case 'room-del': { const r0 = room(id), moved = rows('task').filter(t => t.room === id).map(t => ['task', { ...t, room: 'general' }]); write([...moved, ['room', { ...(rows('room').find(x => x.id === id) || {}), id, n: r0.n, e: r0.e, hidden: true }]]); toast(`🗑️ "${esc(r0.n)}" הוסר${moved.length ? `, ${moved.length} משימות עברו לכללי` : ''}`, { undo: () => { write([...moved.map(([, t]) => ['task', { ...t, room: id }]), ['room', { ...(rows('room').find(x => x.id === id) || {}), id, hidden: false }]]); } }); roomsSheet(); break; }
+    case 'room-preset': { const p = ROOM_PRESETS.find(x => x.id === id); if (!p) break; put('room', { id: p.id, n: p.n, e: p.e, order: 100 + rooms().length }); sheet(`<h2 id="sheet-title">${p.e} ${p.n} נוסף לבית!</h2><p class="muted" style="margin-top:-6px">רוצים להוסיף גם משימות מוצעות? לוחצים על מה שמתאים:</p>${allTpl().map((x, i) => [x, i]).filter(([x]) => x[0] === p.id).map(([x, i]) => `<button type="button" class="tpl" data-act="add-tpl" data-i="${i}"><span class="e" aria-hidden="true">${x[2]}</span><span>${x[1]}<br><small>${repeatLabel(x[3]) || 'פעם אחת'} · ⭐ ${POINTS[x[4]]}</small></span><b aria-hidden="true">➕</b></button>`).join('')}<div class="actions" style="margin-top:14px"><button type="button" class="btn primary" data-act="rooms">👍 סיימתי</button><button type="button" class="btn ghost" data-act="room-tasks" data-id="${p.id}">✍️ משימה משלי</button></div>`); break; }
+    case 'close-focus': closeSheet(); if (tab !== 'shop') go('shop'); setTimeout(() => $('#item-in')?.focus(), 260); break;
     case 'assign': assignSheet(id); break;
     case 'assign-to': { const t = rec(id), w = a.dataset.who; if (!t) break; const nt = { ...t, assignee: w }; if (w === 'rotate' && !member(nt.turn)) nt.turn = S.meId || members()[0]?.id; put('task', nt); closeSheet(); toast(w === 'any' ? '👐 כל מי שפנוי יכול לעשות את זה' : w === 'rotate' ? '🔄 המשימה עברה לתורנות' : `🏷️ ${esc(member(w)?.name || '')} מתויג/ת על "${esc(t.title)}"`); break; }
     case 'assign-new': memberSheet(null, { onDone: m => { const t = rec(id); if (t) put('task', { ...t, assignee: m.id }); } }); break;
@@ -914,7 +1088,7 @@ document.addEventListener('click', e => {
 /* ---------- start ---------- */
 { const y = $('#yr'); if (y) y.textContent = new Date().getFullYear(); }
 function start() {
-  $('#tabbar').hidden = false; requestAnimationFrame(movePill);
+  $('#tabbar').hidden = false; $('#topnav').hidden = false; requestAnimationFrame(movePill);
   const h = location.hash.slice(1);
   go(LEGAL[h] ? 'home' : h || 'home', false);
   if (LEGAL[h]) setTimeout(() => legalSheet(h), 300);

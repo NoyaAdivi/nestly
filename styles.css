@@ -590,3 +590,53 @@ html[data-theme="dark"] .built-by svg{ fill:#8fd0ff }
 .legal-nav a:hover{ background:var(--sky-m) }
 
 .cat-pick select{ width:auto; max-width:220px; flex:none }
+
+/* ---------- shop tools and import ---------- */
+.shop-tools{ display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:10px 2px 2px; margin:0 -2px }
+.shop-tools::-webkit-scrollbar{ display:none }
+.tool-btn{ flex:none; padding:7px 12px; border-radius:99px; background:var(--card); border:1.5px solid var(--line); color:var(--navy); font-weight:600; font-size:.84rem; white-space:nowrap; transition:transform .2s var(--ease), border-color .2s, background .2s }
+.tool-btn:hover{ transform:translateY(-2px); border-color:var(--sky); background:var(--sky-l) }
+.tool-btn:first-child{ background:var(--lilac); border-color:color-mix(in srgb,var(--lilac-d) 30%,transparent) }
+.imp-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:10px }
+.imp{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:14px; border-radius:18px; text-align:start; border:2px solid var(--line); background:var(--bg2); color:var(--navy); transition:transform .25s var(--ease), border-color .2s; animation:popIn .35s var(--ease) both }
+.imp:nth-child(1){ background:var(--lilac) } .imp:nth-child(2){ background:var(--sky-l) } .imp:nth-child(3){ background:var(--mint) } .imp:nth-child(4){ background:var(--blush) }
+.imp:hover{ transform:translateY(-3px); border-color:var(--sky) }
+.imp .e{ font-size:1.7rem } .imp b{ font-size:.98rem } .imp small{ color:var(--muted); font-size:.8rem; line-height:1.35 }
+.rev{ list-style:none; margin:4px 0 0; padding:0; display:grid; gap:6px; max-height:48vh; overflow:auto }
+.rev li{ display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:14px; background:var(--bg2) }
+.rev input[type=checkbox]{ width:22px; height:22px; flex:none }
+.rev .e{ font-size:1.2rem; flex:none }
+.rev .rn{ flex:1; min-width:0; padding:8px 10px!important }
+.rev .rq{ width:62px; flex:none; padding:8px!important; text-align:center }
+.rev li:has(input[type=checkbox]:not(:checked)){ opacity:.5 }
+
+/* ---------- tagging and rooms ---------- */
+.tag-tip{ margin:0 4px 10px; font-size:.84rem; color:var(--muted) }
+.who-btn.empty .tag-av{ background:transparent; border:2px dashed var(--sky); color:var(--sky-d) }
+.who-btn.empty small{ color:var(--sky-d) }
+.who-btn.empty:hover .tag-av{ background:var(--sky-l) }
+.room-row{ display:flex; align-items:center; gap:10px; padding:10px 6px; border-bottom:1px dashed var(--line) }
+.room-row:last-child{ border-bottom:0 }
+.room-row .e{ font-size:1.5rem; width:42px; height:42px; display:grid; place-items:center; border-radius:13px; background:var(--sky-l); flex:none }
+.room-row > span:nth-child(2){ flex:1; display:flex; flex-direction:column } .room-row small{ color:var(--muted); font-size:.8rem }
+
+/* ---------- top navigation on wide screens ---------- */
+.topnav{ display:none; gap:4px; padding:4px; border-radius:18px; background:var(--card); border:1.5px solid var(--line) }
+.tnav{ position:relative; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:14px; font-weight:700; font-size:.92rem; color:var(--muted); transition:background .25s, color .25s }
+.tnav:hover{ color:var(--navy); background:var(--sky-l) }
+.tnav.on{ color:var(--navy); background:var(--grad-2); background-size:300% 100%; animation:flow 8s linear infinite; box-shadow:0 3px 0 #9cc0e0 }
+html[data-theme="dark"] .tnav.on{ color:#0d1830; box-shadow:none }
+.tb{ font-style:normal; min-width:18px; height:18px; padding:0 5px; border-radius:99px; background:linear-gradient(135deg,#f08aa0,#c9a4f2); color:#fff; font-size:.68rem; display:grid; place-items:center }
+@media (min-width:880px){
+  .topbar{ padding-inline:max(16px,calc(50% - 520px)) }
+  .topnav:not([hidden]){ display:flex }
+  .tabbar{ display:none!important }
+  .fab{ bottom:28px }
+  .toasts{ bottom:28px }
+  .site-foot{ padding-bottom:40px }
+}
+/* page slide when swiping */
+#main[data-slide="next"] .view{ animation:slideN .4s var(--ease) }
+#main[data-slide="prev"] .view{ animation:slideP .4s var(--ease) }
+@keyframes slideN{ from{ opacity:0; transform:translateX(-40px) } }
+@keyframes slideP{ from{ opacity:0; transform:translateX(40px) } }
