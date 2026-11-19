@@ -231,7 +231,7 @@ const calm = () => document.documentElement.classList.contains('nk-still') || ma
 let parts = [], raf = 0;
 function confetti(x = innerWidth / 2, y = innerHeight / 2, n = 70) {
   if (calm()) return;
-  const cols = ['#c9b8ff', '#ffc6dd', '#ffd9bf', '#bdf0db', '#c7e6ff', '#fff1bd', '#8f74f0'];
+  const cols = ['#a8dcff', '#b6efe0', '#dbf7cc', '#7fd3ff', '#6fe0b4', '#fff1bd', '#2f93cc', '#c7f0ff'];
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 7;
     parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 5, r: 4 + Math.random() * 5, c: cols[i % cols.length], rot: Math.random() * 6, vr: (Math.random() - .5) * .4, life: 90 + Math.random() * 40, sq: Math.random() > .5 });
@@ -619,7 +619,7 @@ function backup() {
 /* ----- ONBOARDING ----- */
 function onboarding(joinCode) {
   $('#tabbar').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
-  const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'lav'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'pink']];
+  const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'lav'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'sky']];
   main.innerHTML = `<div class="view onb">
     <section class="onb-hero">
       <div class="hero-badge" aria-hidden="true">
