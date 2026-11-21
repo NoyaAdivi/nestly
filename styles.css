@@ -42,7 +42,7 @@ html[data-theme="dark"]{
 
 /* ---------- base ---------- */
 *{ box-sizing:border-box } [hidden]{ display:none!important }
-html{ -webkit-tap-highlight-color:transparent; scroll-behavior:smooth; scrollbar-width:thin; scrollbar-color:var(--line-2) transparent }
+html{ -webkit-tap-highlight-color:transparent; scrollbar-width:thin; scrollbar-color:var(--line-2) transparent }
 body{ margin:0; min-height:100vh; font-family:var(--font); color:var(--ink); background:var(--bg); line-height:1.5; overflow-x:hidden }
 ::selection{ background:var(--sky-m); color:var(--navy) }
 button,input,select,textarea{ font:inherit; color:inherit }
@@ -408,7 +408,7 @@ body.view-onb .site-foot{ padding-bottom:40px }
 html[data-theme="dark"] .built-by svg{ fill:#70b5f9 } html[data-theme="dark"] .built-by a{ background:rgba(112,181,249,.14) }
 
 /* ---------- shared kit + FAQ in Nestly colors ---------- */
-body:not(.view-home):not(.view-onb) .na-faq{ display:none }
+body:not(.view-home):not(.view-onb) .na-faq:not(.in-sheet){ display:none }
 #faq{ scroll-margin-top:84px } .na-faq{ margin-top:34px!important }
 .na-faq h2{ background:none!important; color:var(--navy)!important; -webkit-text-fill-color:currentColor!important; font-family:var(--head)!important }
 .na-eye{ background:var(--sky-l)!important; color:var(--sky-d)!important; border:2px solid var(--sky-m) }
@@ -417,7 +417,7 @@ html:not([data-theme="dark"]) .na-item,html:not([data-theme="dark"]) .na-search 
 .na-chip[aria-pressed=true]{ background:var(--navy)!important; color:#fff!important; box-shadow:0 3px 0 var(--navy-3)!important }
 html[data-theme="dark"] .na-chip[aria-pressed=true]{ background:var(--sky)!important; color:#0d1830!important }
 .na-install .na-go{ background:var(--navy)!important } .na-hl{ background:var(--sky-m)!important; color:inherit!important }
-.na-top{ color:var(--navy)!important; border:2px solid var(--line)!important; bottom:calc(178px + env(safe-area-inset-bottom))!important }
+.na-top{ color:var(--navy)!important; border:2px solid var(--line)!important }
 .nk-tab{ background:var(--navy)!important; border-color:#fff!important; box-shadow:0 4px 0 var(--navy-3), 0 14px 28px rgba(27,45,92,.35)!important }
 html[data-theme="dark"] .nk-tab{ background:#3a7fc0!important }
 .nk-b[aria-pressed=true]{ background:#1b2d5c!important; color:#fff!important; border-color:#1b2d5c!important }
@@ -709,4 +709,113 @@ body.list-mode .site-foot{ padding-bottom:40px }
   body.view-home #dyn > section.card:not(.hello),body.view-family #dyn > section.card{ column-span:none; width:100%; margin:0 0 18px }
   .list{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
   .card .list{ grid-template-columns:1fr }
+}
+
+/* =========================================================
+   Smooth & solid: performance, layout and language fixes
+   ========================================================= */
+/* 1. no heavy effects that make phones stutter */
+body{ background:var(--bg)!important }
+.bg{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; background:linear-gradient(180deg,var(--bg),var(--bg2)); contain:strict }
+.bg::after{ display:none!important; animation:none!important }
+.blobs span{ animation:none!important; will-change:auto }
+.card,.stat,.feat,.task,.item,.foot-card{ backdrop-filter:none!important; -webkit-backdrop-filter:none!important }
+.btn.primary,.fab,.tab-pill,.chip[aria-pressed="true"],.step > span,.tnav.on,.top-add,.code-box,.sc-next,h1 u,h1 em,.hero h1 span{ animation:none!important; background-size:100% 100%!important }
+.brand-txt b::after{ animation:swoosh .8s var(--ease) both .2s!important; background-size:100% 100%!important }
+.fab{ animation:none!important }
+.logo-wrap::after{ animation-duration:9s }
+.task{ animation:none }
+.stat .n,.ring .fg,.bar i,.room-banner{ animation:none }
+/* entry animations play once, only when a page opens (not on every tap or sync) */
+#main:not(.enter) .view,#main:not(.enter) .view > *{ animation:none!important }
+#main:not(.enter) .pop{ animation:none!important }
+#main.enter .stat .n{ animation:countPop .5s var(--ease) both .15s }
+#main.enter .ring .fg{ animation:ringIn 1s var(--ease) both .15s }
+#main.enter .bar i{ animation:grow .9s var(--ease) both .2s }
+.view{ animation-duration:.3s!important }
+.view > *{ animation:rise .42s var(--ease) both }
+.pop{ animation-duration:.38s }
+@keyframes rise{ from{ opacity:0; transform:translateY(10px) } }
+@keyframes popIn{ from{ opacity:0; transform:translateY(8px) } }
+.task.checking{ animation:out .45s ease .2s forwards!important }
+html:has(dialog[open]){ overflow:hidden }
+@media (hover:none),(max-width:879px){
+  .topbar,.tabbar{ backdrop-filter:none!important; -webkit-backdrop-filter:none!important }
+  .topbar{ background:color-mix(in srgb,var(--bg) 94%,transparent) }
+  .tabbar{ background:var(--solid) }
+  .floaty,.spark{ display:none }
+  .blobs span{ filter:blur(40px) }
+  dialog::backdrop{ backdrop-filter:none }
+  .btn,.chip,.task,.item,.stat,.card{ transition-property:background-color,border-color,color,opacity,transform!important; transition-duration:.18s!important }
+}
+
+/* 2. bottom sheet: fits the phone screen, scrolls inside, no page jump */
+dialog{ max-height:min(92vh,92dvh) }
+.sheet-card{ max-height:min(92vh,92dvh); overscroll-behavior:contain; -webkit-overflow-scrolling:touch }
+dialog[open] .sheet-card{ animation:up .32s var(--ease) }
+#sheet .na-faq{ margin:0!important; padding:0!important; max-width:none }
+#sheet .na-faq .na-head{ padding-inline-end:44px }
+
+/* 3. floating buttons that never sit on top of each other or in the middle of the screen */
+.fab{ left:max(16px,calc(50% - 336px)); right:auto; bottom:calc(98px + env(safe-area-inset-bottom)) }
+[dir=ltr] .fab{ left:auto; right:max(16px,calc(50% - 336px)) }
+.na-top{ inset-inline-start:auto!important; inset-inline-end:max(18px,calc(50% - 336px))!important; bottom:calc(160px + env(safe-area-inset-bottom))!important; width:46px!important; height:46px!important; border-radius:16px!important }
+body.view-shop .na-top,body.list-mode .na-top{ bottom:calc(98px + env(safe-area-inset-bottom))!important }
+body.view-onb .na-top{ bottom:calc(20px + env(safe-area-inset-bottom))!important }
+@media (min-width:880px){ .na-top{ inset-inline-end:24px!important; bottom:24px!important } }
+.toasts{ z-index:40 }
+
+/* 4. language button */
+.lang-btn b{ font:800 .82rem var(--font); letter-spacing:.02em; color:var(--navy) }
+html[data-theme="dark"] .lang-btn b{ color:#eaf2ff }
+@media (max-width:430px){
+  .top-actions{ gap:6px }
+  .top-actions .icon-btn{ width:40px; height:40px; border-radius:13px }
+  .sync span{ display:none } .sync{ padding:0 10px; min-height:40px }
+  .brand-txt small{ max-width:34vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+}
+@media (max-width:360px){ .logo-wrap{ width:40px; height:40px } .logo-wrap img{ width:36px; height:36px } }
+
+/* 5. English (left to right) */
+[dir=ltr] .skip{ right:auto; left:12px }
+[dir=ltr] .page-h h1::after{ right:auto; left:0; transform-origin:left }
+[dir=ltr] .onb h1 .grad-txt::after,[dir=ltr] .brand-txt b::after{ transform-origin:left }
+[dir=ltr] .x{ left:auto; right:14px }
+[dir=ltr] .sheet-card h2{ padding-left:0; padding-right:48px }
+[dir=ltr] .link-btn:hover,[dir=ltr] .board-row:hover,[dir=ltr] .set-row:hover,[dir=ltr] .step:hover{ transform:translateX(3px) }
+[dir=ltr] .tpl:hover{ transform:translateX(4px) }
+[dir=ltr] .step em,[dir=ltr] .set-row > span:last-child{ display:inline-block; transform:scaleX(-1) }
+@keyframes outL{ to{ opacity:0; transform:translateX(40px) scale(.95) } }
+[dir=ltr] .task.checking{ animation-name:outL!important }
+[dir=ltr] .sc-prev{ right:auto; left:-4px } [dir=ltr] .sc-next{ left:auto; right:-4px }
+[dir=ltr] .sc-arrow span[aria-hidden]{ display:inline-block; transform:scaleX(-1) }
+[dir=ltr] .scroller.can-prev > *:first-child{ -webkit-mask-image:linear-gradient(to right,transparent 0,#000 44px); mask-image:linear-gradient(to right,transparent 0,#000 44px) }
+[dir=ltr] .scroller.can-next > *:first-child{ -webkit-mask-image:linear-gradient(to left,transparent 0,#000 44px); mask-image:linear-gradient(to left,transparent 0,#000 44px) }
+[dir=ltr] .scroller.can-prev.can-next > *:first-child{ -webkit-mask-image:linear-gradient(to right,transparent 0,#000 44px,#000 calc(100% - 44px),transparent 100%); mask-image:linear-gradient(to right,transparent 0,#000 44px,#000 calc(100% - 44px),transparent 100%) }
+@keyframes nudgeL{ 50%{ transform:translateX(4px) } }
+[dir=ltr] .sc-next{ animation-name:nudgeL }
+[dir=ltr] .badge{ left:calc(50% + 6px) }
+[dir=ltr] .na-a p{ padding:0 20px 20px 66px }
+
+/* 6. nothing wider than the phone */
+.list{ grid-template-columns:minmax(0,1fr) }
+.task,.item,.card,.stat{ min-width:0 }
+.who-line{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100% }
+.task-main,.i-main{ overflow:hidden }
+.topbar{ gap:8px }
+.brand{ min-width:0; flex:0 1 auto } .brand-txt{ min-width:0 } .top-actions{ flex:none }
+.page-h h1{ min-width:0; overflow-wrap:anywhere }
+@media (max-width:480px){
+  .page-h h1{ white-space:normal; font-size:1.4rem }
+  .page-btns .btn{ min-height:40px!important }
+}
+@media (max-width:380px){
+  .top-actions{ gap:4px } .top-actions .icon-btn{ width:36px; height:36px; border-radius:12px; font-size:1rem }
+  .sync{ padding:0 8px; min-height:36px } .logo-wrap{ width:38px; height:38px; border-radius:12px } .logo-wrap img{ width:34px; height:34px }
+  .brand{ gap:7px } .brand-txt b{ font-size:1.15rem }
+}
+/* toasts: on phones they show under the top bar, so they never hide behind the floating buttons */
+@media (max-width:879px){
+  .toasts{ bottom:auto!important; top:calc(76px + env(safe-area-inset-top)); z-index:2147483001 }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(-14px) scale(.96) } }
 }

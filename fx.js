@@ -15,8 +15,7 @@
 .fx-tilt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
   background:radial-gradient(260px circle at var(--fx-x,50%) var(--fx-y,50%),rgba(255,255,255,.22),rgba(124,196,239,.12) 40%,transparent 70%)}
 .fx-tilt:hover::after{opacity:1}
-button,.btn{transition:transform .15s ease}
-button:active:not(:disabled),.btn:active{transform:scale(.96)}
+.btn:active:not(:disabled),.chip:active{transform:scale(.97)}
 .fx-ripple{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.18;transform:scale(0);animation:fx-rip .6s ease-out forwards}
 @keyframes fx-rip{to{transform:scale(1);opacity:0}}
 .fx-dot{position:fixed;z-index:9999;width:8px;height:8px;border-radius:50%;pointer-events:none;animation:fx-fly .8s cubic-bezier(.2,.7,.3,1) forwards}
@@ -27,7 +26,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.96)}
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   /* scroll progress bar, only when the page has none of its own */
-  if (!document.getElementById('progress')) {
+  if (!document.getElementById('progress') && !(me && me.dataset.bar === 'off')) {
     const bar = document.createElement('div'); bar.id = 'fx-bar'; document.body.appendChild(bar);
     const upd = () => {
       const h = document.documentElement.scrollHeight - innerHeight;
@@ -39,7 +38,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.96)}
 
   /* press ripple on every button, wherever it was created */
   document.addEventListener('pointerdown', (e) => {
-    const b = e.target.closest('button, .btn');
+    const b = e.target.closest('.btn, .chip, .tab, .tnav, .feat');
     if (!b || RM || b.disabled) return;
     const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height) * 2;
     if (getComputedStyle(b).position === 'static') b.style.position = 'relative';
@@ -61,7 +60,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.96)}
     }
   });
 
-  if (RM) return;
+  if (RM || (me && me.dataset.reveal === 'off')) return;
 
   /* scroll reveal: section headers and the items of every card grid, staggered */
   const io = new IntersectionObserver((es) => es.forEach((x) => {

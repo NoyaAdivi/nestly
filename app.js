@@ -18,6 +18,8 @@ const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date
 const today = () => ds(new Date());
 const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return ds(d); };
 const diff = (a, b) => Math.round((parse(a) - parse(b)) / 864e5);
+const EN = () => document.documentElement.lang === 'en';
+const LOC = () => EN() ? 'en-US' : 'he-IL';
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const DSH = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
 const weekStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d.getTime(); };
@@ -25,21 +27,21 @@ const weekStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDat
 function dueInfo(s) {
   if (!s) return { t: 'בלי תאריך', c: '' };
   const n = diff(s, today());
-  if (n < -1) return { t: `באיחור של ${-n} ימים`, c: 'due-late' };
+  if (n < -1) return { t: EN() ? `${-n} days late` : `באיחור של ${-n} ימים`, c: 'due-late' };
   if (n === -1) return { t: 'מאתמול', c: 'due-late' };
   if (n === 0) return { t: 'היום', c: 'due-today' };
   if (n === 1) return { t: 'מחר', c: '' };
-  if (n < 7) return { t: `יום ${DAYS[parse(s).getDay()]}`, c: '' };
-  return { t: parse(s).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }), c: '' };
+  if (n < 7) return { t: EN() ? parse(s).toLocaleDateString('en-US', { weekday: 'long' }) : `יום ${DAYS[parse(s).getDay()]}`, c: '' };
+  return { t: parse(s).toLocaleDateString(LOC(), { day: 'numeric', month: 'short' }), c: '' };
 }
 function ago(iso) {
   const m = Math.round((Date.now() - new Date(iso)) / 6e4);
   if (m < 1) return 'עכשיו';
-  if (m < 60) return `לפני ${m} דק׳`;
+  if (m < 60) return EN() ? `${m} min ago` : `לפני ${m} דק׳`;
   const h = Math.round(m / 60);
-  if (h < 24) return h === 1 ? 'לפני שעה' : `לפני ${h} שעות`;
+  if (h < 24) return h === 1 ? 'לפני שעה' : EN() ? `${h} hours ago` : `לפני ${h} שעות`;
   const d = Math.round(h / 24);
-  return d === 1 ? 'אתמול' : `לפני ${d} ימים`;
+  return d === 1 ? 'אתמול' : EN() ? `${d} days ago` : `לפני ${d} ימים`;
 }
 
 /* ---------- data dictionaries ---------- */
@@ -74,7 +76,8 @@ const AVATARS = ['🦊', '🐼', '🐨', '🐯', '🦁', '🐸', '🐵', '🦄',
 const COLORS = ['lav', 'mint', 'peach', 'pink', 'sky', 'butter'];
 const TASK_EMOJIS = ['✨', '🧹', '🧽', '🫧', '🍽️', '🗑️', '🧺', '👕', '🧦', '🛁', '🚽', '🪞', '🛏️', '🪴', '🐾', '🐕', '🍳', '🧊', '🪟', '🛒', '💳', '🔥', '🪶', '🧸', '📦', '🔧', '🚗', '💡'];
 const EMOJI_KW = [['כביס', '🧺'], ['תלי', '👕'], ['קיפול', '🧦'], ['גיהו', '👔'], ['כלים', '🍽️'], ['מדיח', '🍽️'], ['שאיב', '🧹'], ['טאטא', '🧹'], ['שטיפ', '🫧'], ['רצפ', '🫧'], ['אבק', '🪶'], ['זבל', '🗑️'], ['פח', '🗑️'], ['אמבט', '🛁'], ['מקלחת', '🛁'], ['שירותים', '🚽'], ['אסלה', '🚽'], ['מרא', '🪞'], ['מיטה', '🛏️'], ['מצעים', '🛏️'], ['צמח', '🪴'], ['השקי', '🪴'], ['כלב', '🐕'], ['חתול', '🐈'], ['האכל', '🐾'], ['בישול', '🍳'], ['ארוח', '🍳'], ['מקרר', '🧊'], ['חלונ', '🪟'], ['קניות', '🛒'], ['חשבונ', '💳'], ['תנור', '🔥'], ['כיריים', '🔥'], ['צעצוע', '🧸'], ['מגבות', '🧻'], ['רכב', '🚗'], ['אוטו', '🚗'], ['נורה', '💡'], ['תיקון', '🔧']];
-const guessEmoji = t => (EMOJI_KW.find(([k]) => t.includes(k)) || [, '✨'])[1];
+const EMOJI_EN = [['laundry', '🧺'], ['wash', '🫧'], ['hang', '👕'], ['fold', '🧦'], ['iron', '👔'], ['dish', '🍽️'], ['vacuum', '🧹'], ['sweep', '🧹'], ['mop', '🫧'], ['floor', '🫧'], ['dust', '🪶'], ['trash', '🗑️'], ['garbage', '🗑️'], ['bath', '🛁'], ['shower', '🛁'], ['toilet', '🚽'], ['mirror', '🪞'], ['bed', '🛏️'], ['sheet', '🛏️'], ['plant', '🪴'], ['water', '💧'], ['dog', '🐕'], ['cat', '🐈'], ['feed', '🐾'], ['cook', '🍳'], ['dinner', '🍳'], ['fridge', '🧊'], ['window', '🪟'], ['shop', '🛒'], ['bill', '💳'], ['oven', '🔥'], ['toy', '🧸'], ['towel', '🧻'], ['car', '🚗'], ['fix', '🔧']];
+const guessEmoji = t => (EMOJI_KW.find(([k]) => t.includes(k)) || EMOJI_EN.find(([k]) => t.toLowerCase().includes(k)) || [, '✨'])[1];
 
 const CATS = [
   { id: 'pets', e: '🐾', n: 'לחיות המחמד', k: ['לכלב', 'לחתול', 'חול לחתול', 'אוכל לחיות'] },
@@ -92,7 +95,8 @@ const CATS = [
 ];
 const CAT_ORDER = ['produce', 'dairy', 'bakery', 'meat', 'pantry', 'frozen', 'drinks', 'snacks', 'cleaning', 'hygiene', 'pets', 'other'];
 const cat = id => CATS.find(c => c.id === id) || CATS[CATS.length - 1];
-const guessCat = name => (CATS.find(c => c.k.some(k => name.includes(k))) || CATS[CATS.length - 1]).id;
+const CATS_EN = { pets: ['dog food', 'cat food', 'litter', 'pet'], cleaning: ['soap', 'detergent', 'bleach', 'softener', 'sponge', 'trash bag', 'cleaner', 'wipes', 'dishwasher', 'foil', 'cling'], hygiene: ['shampoo', 'conditioner', 'toothpaste', 'toothbrush', 'deodorant', 'toilet paper', 'tissue', 'diaper', 'razor', 'cream', 'plaster'], frozen: ['frozen', 'ice cream', 'popsicle'], produce: ['tomato', 'cucumber', 'onion', 'garlic', 'apple', 'banana', 'pepper', 'lettuce', 'carrot', 'lemon', 'avocado', 'potato', 'parsley', 'grape', 'orange', 'strawberr', 'melon', 'pear', 'peach', 'mango', 'cabbage', 'broccoli', 'zucchini', 'eggplant', 'mushroom', 'spinach', 'fruit', 'veg', 'herb'], dairy: ['milk', 'cheese', 'yogurt', 'yoghurt', 'cream', 'butter', 'egg', 'cottage', 'labneh', 'mozzarella'], bakery: ['bread', 'pita', 'challah', 'roll', 'baguette', 'cake', 'croissant', 'tortilla', 'bun', 'bagel'], meat: ['chicken', 'beef', 'meat', 'schnitzel', 'fish', 'salmon', 'sausage', 'turkey', 'steak', 'hot dog', 'tuna steak'], drinks: ['water', 'juice', 'soda', 'cola', 'beer', 'wine', 'drink', 'syrup'], snacks: ['bamba', 'bissli', 'chocolate', 'snack', 'cookie', 'candy', 'chips', 'popcorn', 'wafer', 'crackers'], pantry: ['rice', 'pasta', 'spaghetti', 'flour', 'sugar', 'salt', 'oil', 'spice', 'paprika', 'sauce', 'coffee', 'tea', 'cereal', 'cornflakes', 'tahini', 'tuna', 'beans', 'lentil', 'honey', 'jam'] };
+const guessCat = name => { const low = name.toLowerCase(); return (CATS.find(c => c.k.some(k => name.includes(k))) || CATS.find(c => (CATS_EN[c.id] || []).some(k => low.includes(k))) || CATS[CATS.length - 1]).id; };
 /* recommended shopping list, by aisle: [emoji, name] */
 const RECS = {
   produce: [['🍅', 'עגבניות'], ['🥒', 'מלפפונים'], ['🧅', 'בצל'], ['🧄', 'שום'], ['🫑', 'פלפלים'], ['🥕', 'גזר'], ['🥬', 'חסה'], ['🥔', 'תפוחי אדמה'], ['🍋', 'לימונים'], ['🥑', 'אבוקדו'], ['🍌', 'בננות'], ['🍎', 'תפוחים'], ['🌿', 'פטרוזיליה'], ['🍇', 'ענבים']],
@@ -238,11 +242,11 @@ function scrollers(root) {
   $$('.chips.scroll, .shop-tools', root).forEach(el => {
     if (el.parentElement?.classList.contains('scroller')) return;
     const wrap = document.createElement('div'); wrap.className = 'scroller'; el.before(wrap); wrap.append(el);
-    const mk = (cls, label, dir) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sc-arrow ' + cls; b.setAttribute('aria-label', label); b.innerHTML = cls === 'sc-prev' ? '<span aria-hidden="true">›</span>' : '<span class="t">עוד</span><span aria-hidden="true">‹</span>'; b.onclick = () => el.scrollBy({ left: dir * el.clientWidth * .7, behavior: calm() ? 'auto' : 'smooth' }); return b; };
+    const mk = (cls, label, dir) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sc-arrow ' + cls; b.setAttribute('aria-label', label); b.innerHTML = cls === 'sc-prev' ? '<span aria-hidden="true">›</span>' : '<span class="t">עוד</span><span aria-hidden="true">‹</span>'; b.onclick = () => el.scrollBy({ left: dir * (getComputedStyle(el).direction === 'rtl' ? 1 : -1) * el.clientWidth * .7, behavior: calm() ? 'auto' : 'smooth' }); return b; };
     wrap.append(mk('sc-prev', 'גלילה ימינה', 1), mk('sc-next', 'גלילה שמאלה', -1));
     const upd = () => { const max = el.scrollWidth - el.clientWidth, pos = Math.abs(el.scrollLeft); wrap.classList.toggle('can-prev', pos > 4); wrap.classList.toggle('can-next', max - pos > 4); };
     el.addEventListener('scroll', upd, { passive: true }); new ResizeObserver(upd).observe(el); upd();
-    el.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) { e.preventDefault(); el.scrollBy({ left: -e.deltaY }); } }, { passive: false });
+    el.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) { e.preventDefault(); el.scrollBy({ left: getComputedStyle(el).direction === 'rtl' ? -e.deltaY : e.deltaY }); } }, { passive: false });
     let down = false, sx = 0, sl = 0, moved = false;
     el.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; down = true; moved = false; sx = e.clientX; sl = el.scrollLeft; });
     addEventListener('pointermove', e => { if (!down) return; const dx = e.clientX - sx; if (Math.abs(dx) > 5) { moved = true; el.scrollLeft = sl - dx; } });
@@ -268,7 +272,7 @@ const pop = id => { const p = seen.has(id) ? '' : 'pop'; seen.add(id); return p;
 function repeatLabel(r) {
   if (!r || r.type === 'none') return '';
   if (r.type === 'daily') return 'כל יום';
-  if (r.type === 'interval') return `כל ${r.every} ימים`;
+  if (r.type === 'interval') return EN() ? `Every ${r.every} days` : `כל ${r.every} ימים`;
   if (r.type === 'monthly') return 'כל חודש';
   return r.days?.length && r.days.length < 7 ? `כל ${r.days.map(d => DSH[d]).join(' ')}` : 'כל שבוע';
 }
@@ -345,17 +349,27 @@ function loop() {
 /* ---------- sheet (dialog) ---------- */
 const dlg = $('#sheet');
 let lastFocus = null;
+const FINE = matchMedia('(hover:hover) and (pointer:fine)').matches;
+function restoreFaq() { const f = $('#sheet #faq'); if (f) { f.classList.remove('in-sheet'); $('.site-foot').before(f); } }
 function sheet(html, onOpen) {
-  lastFocus = document.activeElement;
+  if (!dlg.open) lastFocus = document.activeElement;
+  restoreFaq();
   const old = $('#sheet-body'), nb = old.cloneNode(false); old.replaceWith(nb); nb.innerHTML = html;
   if (!dlg.open) dlg.showModal();
+  $('.sheet-card').scrollTop = 0;
   onOpen && onOpen($('#sheet-body')); scrollers($('#sheet-body'));
-  const f = $('#sheet-body input:not([type=hidden]), #sheet-body button.chip, #sheet-body .btn'); f && f.focus({ preventScroll: true });
+  // on a phone, opening the keyboard by itself pushes the sheet around, so only a computer gets the cursor in the first field
+  const f = FINE ? $('#sheet-body input:not([type=hidden]):not([type=search]), #sheet-body button.chip, #sheet-body .btn') : null;
+  (f || $('#sheet-title') || $('.sheet-card .x')).focus({ preventScroll: true });
+}
+function faqSheet() {
+  const f = $('#faq'); if (!f) return;
+  sheet('<h2 id="sheet-title" class="sr">❓ שאלות נפוצות</h2><div id="faq-slot"></div>', b => { f.hidden = false; f.classList.add('in-sheet'); $('#faq-slot', b).replaceWith(f); });
 }
 function closeSheet() {
   if (!dlg.open) return;
   dlg.classList.add('closing');
-  setTimeout(() => { dlg.close(); dlg.classList.remove('closing'); lastFocus?.focus?.(); }, 210);
+  setTimeout(() => { dlg.close(); dlg.classList.remove('closing'); restoreFaq(); lastFocus?.focus?.({ preventScroll: true }); }, 210);
 }
 dlg.addEventListener('click', e => { if (e.target === dlg) closeSheet(); });
 dlg.addEventListener('cancel', e => { e.preventDefault(); closeSheet(); });
@@ -366,8 +380,12 @@ function placeKit() {
   const t = document.querySelector('.nk-tab'); if (!t) return;
   let saved = null; try { saved = JSON.parse(localStorage.getItem('noya-kit:pos')); } catch { }
   if (saved) return;
-  t.style.top = Math.max(80, innerHeight - (innerWidth < 700 ? 236 : 200)) + 'px';
+  // bottom corner on the start side (right in Hebrew, left in English), level with the + button
+  const sz = t.offsetWidth || 56, mob = innerWidth < 880;
+  t.style.top = Math.max(80, innerHeight - sz - (mob ? 98 : 24)) + 'px';
+  t.style.left = (EN() ? 16 : innerWidth - sz - 16) + 'px';
 }
+addEventListener('nestly:lang', () => setTimeout(placeKit, 30));
 addEventListener('load', () => setTimeout(placeKit, 60));
 addEventListener('resize', () => setTimeout(placeKit, 60));
 
@@ -382,6 +400,7 @@ function go(t, push = true) {
   if (!VIEWS[t]) t = 'home';
   if (LISTMODE) t = 'shop';
   tab = t; seen.clear();
+  main.classList.add('enter'); clearTimeout(go.t); go.t = setTimeout(() => main.classList.remove('enter'), 900);
   if (push && location.hash !== '#' + t) history.pushState(null, '', '#' + t);
   $$('.tab, .tnav').forEach(b => { const on = b.dataset.go === t; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
   setView(t); movePill();
@@ -389,7 +408,7 @@ function go(t, push = true) {
   main.innerHTML = `<div class="view">${v.shell ? v.shell() : '<div id="dyn"></div>'}</div>`;
   v.mount && v.mount();
   refresh();
-  scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
+  scrollTo({ top: 0, behavior: 'instant' });
   $('#fab').hidden = t === 'shop' || LISTMODE;
   $('#fab').setAttribute('aria-label', { home: 'הוספה מהירה', tasks: 'משימה חדשה', family: 'הוספת בן או בת בית' }[t] || 'הוספה');
   { const ta = $('#top-add'); if (ta) { ta.hidden = $('#fab').hidden; ta.lastElementChild.textContent = { home: 'הוספה', tasks: 'משימה חדשה', family: 'בן/בת בית' }[t] || 'הוספה'; } }
@@ -445,7 +464,7 @@ homeView.body = () => {
   const max = Math.max(1, ...board.map(b => b.p));
   const feed = logs().slice(0, 6);
   return `<section class="hello">
-    <p class="date">יום ${DAYS[new Date().getDay()]}, ${new Date().toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}</p>
+    <p class="date">${EN() ? new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : `יום ${DAYS[new Date().getDay()]}, ${new Date().toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}`}</p>
     <h1>${greet}${m ? `, ${esc(m.name)}` : ''} <span class="wave">${m ? esc(m.emoji) : '👋'}</span></h1>
     <p class="sub">${lines[new Date().getDate() % lines.length]}</p><img src="logo.svg" alt="" class="hello-art" width="96" height="96"></section>
   <div class="stats">
@@ -738,7 +757,7 @@ async function listLinkSheet() {
     if (!t) return toast('😕 לא הצלחתי ליצור קישור, כדאי לנסות שוב');
     S.shareToken = t; save();
   }
-  const link = listLink(t), msg = `🛒 רשימת הקניות של "${homeName()}" ב־Nestly. אפשר להוסיף ולסמן מה נקנה:\n${link}`;
+  const link = listLink(t), msg = EN() ? `🛒 The shopping list of "${homeName()}" on Nestly. You can add and check off items:\n${link}` : `🛒 רשימת הקניות של "${homeName()}" ב־Nestly. אפשר להוסיף ולסמן מה נקנה:\n${link}`;
   sheet(`<h2 id="sheet-title">🔗 הקישור לרשימה מוכן!</h2><p class="muted" style="margin-top:-6px">מי שפותח אותו רואה רק את רשימת הקניות ויכול להוסיף ולסמן. כל שינוי מגיע לכולם.</p>
     <div class="link-box" dir="ltr">${esc(link)}</div>
     <div class="actions" style="flex-direction:column"><a class="btn primary wide" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 שליחה בוואטסאפ</a>
@@ -941,7 +960,7 @@ function itemSheet(id) {
 function shareList() {
   const act = rows('shop').filter(i => !i.bought);
   if (!act.length && LISTMODE) return toast('🧺 הרשימה ריקה כרגע');
-  const txt = `🛒 רשימת קניות: ${homeName()}\n` + CAT_ORDER.map(cat).map(c => { const g = act.filter(x => x.cat === c.id); return g.length ? `\n${c.e} ${c.n}\n${g.map(x => `• ${x.name}${x.qty > 1 ? ` ×${x.qty}` : ''}${x.note ? ` (${x.note})` : ''}`).join('\n')}` : ''; }).join('') + (CLOUD ? `\n\n📲 להוספה לרשימה: ${joinLink()}` : '');
+  const txt = `${EN() ? '🛒 Shopping list' : '🛒 רשימת קניות'}: ${homeName()}\n` + CAT_ORDER.map(cat).map(c => { const g = act.filter(x => x.cat === c.id); return g.length ? `\n${c.e} ${tx(c.n)}\n${g.map(x => `• ${tx(x.name)}${x.qty > 1 ? ` ×${x.qty}` : ''}${x.note ? ` (${x.note})` : ''}`).join('\n')}` : ''; }).join('') + (CLOUD ? `\n\n📲 ${EN() ? 'Add to the list' : 'להוספה לרשימה'}: ${joinLink()}` : '');
   sheet(`<h2 id="sheet-title">📤 שיתוף רשימת הקניות</h2>
     ${LISTMODE ? '' : `<div class="share-box"><b>🔗 קישור לרשימת הקניות בלבד</b><small>מי שמקבל אותו רואה ויכול להוסיף ולסמן רק ברשימת הקניות. בלי המשימות, בלי ההגדרות ובלי קוד הבית. מתאים לסבתא, לבייביסיטר או לשותפים.</small>
       <div class="actions"><button type="button" class="btn primary" data-act="list-link">🔗 יצירת קישור לרשימה</button>${S.shareToken ? '<button type="button" class="btn ghost danger" data-act="list-revoke">⛔ ביטול כל הקישורים</button>' : ''}</div></div>`}
@@ -959,9 +978,9 @@ function shareList() {
 }
 function startMic(btn) {
   if (rec2) { rec2.stop(); return; }
-  rec2 = new SR(); rec2.lang = 'he-IL'; rec2.interimResults = false;
+  rec2 = new SR(); rec2.lang = EN() ? 'en-US' : 'he-IL'; rec2.interimResults = false;
   btn.classList.add('on'); btn.setAttribute('aria-label', 'מקשיב... לחיצה לעצירה');
-  rec2.onresult = e => { const t = e.results[0][0].transcript; const inp = $('#item-in'); inp.value = t.replace(/ ו(?=\S)/g, ', ').replace(/ וגם /g, ', '); inp.focus(); };
+  rec2.onresult = e => { const t = e.results[0][0].transcript; const inp = $('#item-in'); inp.value = t.replace(/ ו(?=\S)/g, ', ').replace(/ וגם /g, ', ').replace(/ and (also )?/gi, ', '); inp.focus(); };
   rec2.onerror = () => toast('🎤 לא הצלחתי לשמוע. כדאי לבדוק הרשאת מיקרופון');
   rec2.onend = () => { btn.classList.remove('on'); btn.setAttribute('aria-label', 'הוספה בקול'); rec2 = null; };
   rec2.start(); toast('🎤 מקשיב... אפשר לומר כמה פריטים');
@@ -975,7 +994,7 @@ familyView.body = () => {
   return `<div class="page-h"><h1>👨‍👩‍👧 ${esc(homeName())}</h1><div class="page-h-btns"><button class="btn soft" data-act="homes" style="min-height:42px;padding:0 14px">🏘️ ${homes().length > 1 ? `הבתים שלי (${homes().length})` : 'בית נוסף'}</button><button class="btn soft" data-act="rename" style="min-height:42px;padding:0 14px">✏️ שינוי שם</button></div></div>
   ${CLOUD ? `<section class="card code-box"><h2>💌 מזמינים את בני הבית</h2><p style="margin:6px 0 0">שולחים קישור או קוד, וכל אחד מצטרף מהטלפון שלו</p>
     <div class="code" aria-label="קוד הבית: ${S.code.split('').join(' ')}">${fmtCode(S.code)}</div>
-    <div class="code-actions"><button class="btn" data-act="copy-code">📋 העתקת קוד</button><button class="btn" data-act="copy-link">🔗 העתקת קישור</button><a class="btn" href="https://wa.me/?text=${encodeURIComponent(`🏡 בואו להצטרף לבית "${homeName()}" ב-Nestly! משימות ורשימת קניות משותפת\n${joinLink()}\nקוד: ${fmtCode(S.code)}`)}" target="_blank" rel="noopener">💬 וואטסאפ</a></div>
+    <div class="code-actions"><button class="btn" data-act="copy-code">📋 העתקת קוד</button><button class="btn" data-act="copy-link">🔗 העתקת קישור</button><a class="btn" href="https://wa.me/?text=${encodeURIComponent(EN() ? `🏡 Come join our home "${homeName()}" on Nestly! Shared chores and shopping list\n${joinLink()}\nCode: ${fmtCode(S.code)}` : `🏡 בואו להצטרף לבית "${homeName()}" ב-Nestly! משימות ורשימת קניות משותפת\n${joinLink()}\nקוד: ${fmtCode(S.code)}`)}" target="_blank" rel="noopener">💬 וואטסאפ</a></div>
     <div class="qr" id="qr" aria-label="קוד QR להצטרפות" role="img" hidden></div></section>`
     : `<section class="card"><h2>💌 הזמנת בני הבית</h2><div class="note">🔒 כרגע האפליקציה שומרת הכל רק במכשיר הזה. כדי שכל בני הבית יוכלו להצטרף בקישור או בקוד ולראות את אותה רשימה, צריך לחבר את Supabase פעם אחת (לפי ההוראות ב-README). עד אז אפשר להוסיף את בני הבית ידנית ולנהל הכל מכאן.</div></section>`}
   <section class="card"><div class="card-h"><h2>👪 בני הבית (${ms.length})</h2><button class="link-btn" data-act="add-member">➕ הוספה</button></div>
@@ -1128,8 +1147,8 @@ document.addEventListener('click', e => {
       if (g.hasAttribute('data-multi')) chip.setAttribute('aria-pressed', chip.getAttribute('aria-pressed') !== 'true');
       else $$('.chip', g).forEach(c => c.setAttribute('aria-pressed', c === chip));
       const name = g.dataset.group, val = chip.dataset.val;
-      if (name === 'tf') { tFilter = val; seen.clear(); refresh(); return; }
-      if (name === 'tr') { tRoom = val; seen.clear(); refresh(); return; }
+      if (name === 'tf') { tFilter = val; refresh(); return; }
+      if (name === 'tr') { tRoom = val; refresh(); return; }
       if (name === 'sg') { addItem(val, 1); return; }
       g.dispatchEvent(new CustomEvent('chip', { bubbles: true, detail: { group: name, val } }));
     }
@@ -1144,7 +1163,7 @@ document.addEventListener('click', e => {
     case 'top': scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' }); break;
     case 'a11y': { const k = $('.nk-tab'); if (k) { k.scrollIntoView?.({ block: 'nearest' }); if (k.getAttribute('aria-expanded') !== 'true') k.click(); } break; }
     case 'theme': $('[data-nk-theme]')?.click(); break;
-    case 'to-faq': closeSheet(); if (S.code && tab !== 'home') go('home'); setTimeout(() => { const f = $('#faq'); if (f) { f.hidden = false; f.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth' }); } }, 260); break;
+    case 'to-faq': faqSheet(); break;
     case 'create': createSheet(); break;
     case 'join': joinSheet(); break;
     case 'fab':
@@ -1185,7 +1204,7 @@ document.addEventListener('click', e => {
     case 'guest-pick': S.meId = id; delete S.guest; save(); closeSheet(); toast(`👋 היי ${esc(member(id)?.name || '')}!`); break;
     case 'rooms': roomsSheet(); break;
     case 'room-open': roomSheet(id); break;
-    case 'room-filter': closeSheet(); tRoom = id; tFilter = 'all'; seen.clear(); refresh(); break;
+    case 'room-filter': closeSheet(); tRoom = id; tFilter = 'all'; refresh(); $('.room-banner')?.scrollIntoView({ block: 'nearest' }); break;
     case 'room-task-del': { const t = clone(rec(id)); if (!t) break; del(id); toast(`🗑️ "${esc(t.title)}" נמחקה`, { undo: () => { put('task', t); dlg.open && roomSheet(a.dataset.r); } }); roomSheet(a.dataset.r); break; }
     case 'room-edit': roomEditSheet(id); break;
     case 'room-tasks': taskSheet(null, { room: id }); break;
@@ -1229,6 +1248,7 @@ document.addEventListener('click', e => {
 
 /* ---------- start ---------- */
 { const y = $('#yr'); if (y) y.textContent = new Date().getFullYear(); }
+addEventListener('nestly:lang', () => { if (S.code) { refresh(); requestAnimationFrame(movePill); } });
 function start() {
   $('#tabbar').hidden = false; $('#topnav').hidden = false; requestAnimationFrame(movePill);
   const h = location.hash.slice(1);
