@@ -140,6 +140,36 @@ const member = id => rec(id) && S.records[id].kind === 'member' ? rec(id) : null
 const me = () => member(S.meId);
 const homeName = () => rec('meta')?.name || 'הבית שלנו';
 
+/* ---------- several homes on one device ---------- */
+const HKEY = 'nestly:homes', hKey = c => 'nestly:h:' + c;
+const homeCodes = () => { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; } };
+const setCodes = l => { try { localStorage.setItem(HKEY, JSON.stringify([...new Set(l)])); } catch { } };
+function stashState(st) { if (!st?.code || st.list) return; try { localStorage.setItem(hKey(st.code), JSON.stringify(st)); } catch { } setCodes([...homeCodes(), st.code]); }
+function readHome(c) { try { return JSON.parse(localStorage.getItem(hKey(c))); } catch { return null; } }
+function homes() { // all homes saved on this device, active first
+  if (!LISTMODE && S.code) setCodes([S.code, ...homeCodes()]);
+  return homeCodes().map(c => { const st = c === S.code ? S : readHome(c); if (!st) return null; const m = st.records?.meta; return { code: c, name: (m && !m.deleted && m.data?.name) || 'הבית שלנו', active: c === S.code, n: Object.values(st.records || {}).filter(r => !r.deleted && r.kind === 'member').length }; }).filter(Boolean);
+}
+function useState(st) { // make st the active home
+  if (S.code && S.code !== st.code) stashState(S);
+  S = st; S.records ||= {}; S.outbox ||= {}; save(); stashState(S);
+  try { localStorage.removeItem(hKey(S.code)); } catch { }
+  tRoom = 'all'; tFilter = 'week'; seen.clear();
+}
+function switchHome(code) {
+  if (code === S.code) { closeSheet(); return; }
+  const st = readHome(code); if (!st) { toast('😕 הבית הזה לא נמצא במכשיר'); return; }
+  useState(st); closeSheet(); history.replaceState(null, '', location.pathname + '#home'); start(); refresh();
+  toast(`🏡 עברת ל"${esc(homeName())}"`);
+}
+function homesSheet() {
+  const hs = homes();
+  sheet(`<h2 id="sheet-title">🏘️ הבתים שלי</h2><p class="muted" style="margin-top:-6px">אפשר לנהל כמה בתים מאותו מכשיר: הבית של ההורים, דירת שותפים, הבית של סבתא... לחיצה על בית עוברת אליו.</p>
+    <div class="settings">${hs.map(h => `<button class="set-row" data-act="home-switch" data-id="${h.code}" ${h.active ? 'aria-current="true"' : ''}><span class="e">${h.active ? '🏡' : '🏠'}</span><span><b>${esc(h.name)}</b><small>${h.active ? 'הבית הפעיל עכשיו · ' : ''}👪 ${h.n} בני בית${CLOUD ? ` · קוד <span dir="ltr">${fmtCode(h.code)}</span>` : ''}</small></span><span aria-hidden="true">${h.active ? '✓' : '←'}</span></button>`).join('')}
+    <button class="set-row" data-act="create"><span class="e">✨</span><span><b>פתיחת בית נוסף</b><small>בית חדש עם משימות ורשימת קניות משלו</small></span><span aria-hidden="true">←</span></button>
+    ${CLOUD ? '<button class="set-row" data-act="join"><span class="e">🔑</span><span><b>הצטרפות לבית נוסף בקוד</b><small>קיבלת קוד מבית אחר? מכאן נכנסים</small></span><span aria-hidden="true">←</span></button>' : ''}</div>`);
+}
+
 function write(list) { // list of [kind, data] or ['del', id]
   for (const [kind, x] of list) {
     if (kind === 'del') { const r = S.records[x]; if (!r) continue; const row = { ...r, deleted: true }; S.records[x] = row; S.outbox[x] = row; }
@@ -171,29 +201,29 @@ function scheduleSync(ms = 350) { clearTimeout(syncTimer); syncTimer = setTimeou
 async function sync() {
   if (!CLOUD || !S.code) { setSync('local'); return; }
   if (syncing) { scheduleSync(800); return; }
-  syncing = true; setSync('busy');
+  syncing = true; setSync('busy'); const st = S;
   try {
-    const out = Object.values(S.outbox);
+    const out = Object.values(st.outbox);
     if (out.length) {
       const snap = out.map(r => JSON.stringify(r));
       const rws = out.filter(r => !LISTMODE || r.kind === 'shop' || r.kind === 'hist').map(({ id, kind, data, deleted }) => ({ id, kind, data, deleted }));
-      if (rws.length) await rpc(LISTMODE ? 'nestly_list_push' : 'nestly_push', LISTMODE ? { p_token: LIST, p_rows: rws } : { p_code: S.code, p_rows: rws });
-      out.forEach((r, i) => { if (JSON.stringify(S.outbox[r.id]) === snap[i]) delete S.outbox[r.id]; });
+      if (rws.length) await rpc(LISTMODE ? 'nestly_list_push' : 'nestly_push', LISTMODE ? { p_token: LIST, p_rows: rws } : { p_code: st.code, p_rows: rws });
+      out.forEach((r, i) => { if (JSON.stringify(st.outbox[r.id]) === snap[i]) delete st.outbox[r.id]; });
     }
-    const since = S.cursor ? new Date(new Date(S.cursor).getTime() - 15000).toISOString() : null;
-    const got = await rpc(LISTMODE ? 'nestly_list_pull' : 'nestly_pull', LISTMODE ? { p_token: LIST, p_since: since } : { p_code: S.code, p_since: since });
-    if (LISTMODE && !S.cursor && !got.length) { listMissing(); syncing = false; return; }
-    if (LISTMODE && got.length && !S.meId && !S.guest && !S.welcomed) { S.welcomed = true; setTimeout(guestSheet, 300); }
+    const since = st.cursor ? new Date(new Date(st.cursor).getTime() - 15000).toISOString() : null;
+    const got = await rpc(LISTMODE ? 'nestly_list_pull' : 'nestly_pull', LISTMODE ? { p_token: LIST, p_since: since } : { p_code: st.code, p_since: since });
+    if (LISTMODE && !st.cursor && !got.length) { listMissing(); syncing = false; return; }
+    if (LISTMODE && got.length && !st.meId && !st.guest && !st.welcomed) { st.welcomed = true; setTimeout(guestSheet, 300); }
     let changed = false;
     for (const r of got) {
-      if (!S.cursor || new Date(r.updated_at) > new Date(S.cursor)) S.cursor = r.updated_at;
-      if (S.outbox[r.id]) continue;
-      const cur = S.records[r.id];
+      if (!st.cursor || new Date(r.updated_at) > new Date(st.cursor)) st.cursor = r.updated_at;
+      if (st.outbox[r.id]) continue;
+      const cur = st.records[r.id];
       if (!cur || !!cur.deleted !== !!r.deleted || JSON.stringify(cur.data) !== JSON.stringify(r.data)) {
-        S.records[r.id] = { id: r.id, kind: r.kind, data: r.data, deleted: !!r.deleted }; changed = true;
+        st.records[r.id] = { id: r.id, kind: r.kind, data: r.data, deleted: !!r.deleted }; changed = true;
       }
     }
-    save(); if (changed) refresh(); setSync('ok');
+    if (st === S) { save(); if (changed) refresh(); } else stashState(st); setSync('ok');
   } catch (e) { console.warn('sync', e); setSync('err'); }
   finally { syncing = false; }
 }
@@ -941,7 +971,7 @@ function familyView() { }
 familyView.body = () => {
   const ms = members(), wp = weekPoints(), done = {};
   logs().forEach(l => done[l.memberId] = (done[l.memberId] || 0) + 1);
-  return `<div class="page-h"><h1>👨‍👩‍👧 ${esc(homeName())}</h1><button class="btn soft" data-act="rename" style="min-height:42px;padding:0 14px">✏️ שינוי שם</button></div>
+  return `<div class="page-h"><h1>👨‍👩‍👧 ${esc(homeName())}</h1><div class="page-h-btns"><button class="btn soft" data-act="homes" style="min-height:42px;padding:0 14px">🏘️ ${homes().length > 1 ? `הבתים שלי (${homes().length})` : 'בית נוסף'}</button><button class="btn soft" data-act="rename" style="min-height:42px;padding:0 14px">✏️ שינוי שם</button></div></div>
   ${CLOUD ? `<section class="card code-box"><h2>💌 מזמינים את בני הבית</h2><p style="margin:6px 0 0">שולחים קישור או קוד, וכל אחד מצטרף מהטלפון שלו</p>
     <div class="code" aria-label="קוד הבית: ${S.code.split('').join(' ')}">${fmtCode(S.code)}</div>
     <div class="code-actions"><button class="btn" data-act="copy-code">📋 העתקת קוד</button><button class="btn" data-act="copy-link">🔗 העתקת קישור</button><a class="btn" href="https://wa.me/?text=${encodeURIComponent(`🏡 בואו להצטרף לבית "${homeName()}" ב-Nestly! משימות ורשימת קניות משותפת\n${joinLink()}\nקוד: ${fmtCode(S.code)}`)}" target="_blank" rel="noopener">💬 וואטסאפ</a></div>
@@ -950,12 +980,13 @@ familyView.body = () => {
   <section class="card"><div class="card-h"><h2>👪 בני הבית (${ms.length})</h2><button class="link-btn" data-act="add-member">➕ הוספה</button></div>
     ${ms.map((m, i) => `<div class="member ${pop('m' + m.id)}" style="--i:${i}">${avatar(m, 'lg')}<div class="nm"><b>${esc(m.name)}${m.id === S.meId ? '<span class="me-tag">אני</span>' : ''}</b><small>⭐ ${wp[m.id] || 0} השבוע · ✅ ${done[m.id] || 0} משימות בסך הכל</small></div><button class="link-btn" data-act="edit-member" data-id="${m.id}" aria-label="עריכת ${esc(m.name)}">✏️</button></div>`).join('')}</section>
   <section class="card settings"><h2 style="margin-bottom:4px">⚙️ הגדרות</h2>
+    <button class="set-row" data-act="homes"><span class="e">🏘️</span><span>הבתים שלי<small>${homes().length > 1 ? `${homes().length} בתים במכשיר הזה · מעבר בין בתים` : 'פתיחה או הצטרפות לבית נוסף'}</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="whoami"><span class="e">🙋</span><span>מי אני במכשיר הזה?<small>כרגע: ${esc(me()?.name || 'לא נבחר')}</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="a11y"><span class="e">♿</span><span>נגישות<small>גודל טקסט, ניגודיות, גופן קריא, עצירת אנימציות</small></span><span aria-hidden="true">←</span></button><button class="set-row" data-act="theme"><span class="e">🌗</span><span>מצב כהה / בהיר<small>החלפת צבעי התצוגה</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="rooms"><span class="e">🏠</span><span>החדרים בבית<small>גינה, רכב, חדר ילדים... מגדירים את הבית לפי מה שיש</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="templates"><span class="e">💡</span><span>רעיונות למשימות<small>חבילת משימות מוכנות לפי חדרים</small></span><span aria-hidden="true">←</span></button>
     <button class="set-row" data-act="backup"><span class="e">💾</span><span>הורדת גיבוי<small>קובץ JSON עם כל הנתונים של הבית</small></span><span aria-hidden="true">←</span></button>
-    <button class="set-row" data-act="leave"><span class="e">🚪</span><span>יציאה מהבית במכשיר הזה<small>${CLOUD ? 'הנתונים נשארים אצל שאר בני הבית' : 'שימו לב: במצב מקומי הנתונים יימחקו'}</small></span><span aria-hidden="true">←</span></button>
+    <button class="set-row" data-act="leave"><span class="e">🚪</span><span>יציאה מהבית במכשיר הזה<small>${CLOUD ? 'הנתונים נשארים אצל שאר בני הבית' : 'שימו לב: במצב מקומי הנתונים של הבית הזה יימחקו'}</small></span><span aria-hidden="true">←</span></button>
   </section>${credit}`;
 };
 function drawQR() {
@@ -1058,7 +1089,7 @@ function createSheet() {
       try {
         if (CLOUD) { let ok = false; for (let i = 0; i < 4 && !ok; i++) { ok = await rpc('nestly_create', { p_code: code, p_name: home }); if (!ok) code = makeCode(); } if (!ok) throw new Error('code'); }
       } catch (x) { console.warn(x); err.textContent = '😕 לא הצלחנו להתחבר לשרת. כדאי לבדוק אינטרנט ואת הגדרות Supabase ב-config.js'; btn.disabled = false; btn.textContent = '🏡 יצירת הבית'; return; }
-      S = { code, records: {}, outbox: {}, cursor: null };
+      useState({ code, records: {}, outbox: {}, cursor: null });
       const mid = uid(); S.meId = mid;
       const list = [['meta', { id: 'meta', name: home }], ['member', { id: mid, name, emoji: emo, color: 'lav', created: Date.now() }]];
       if (f.starter.checked) STARTER.forEach(i => list.push(['task', tplTask(i)]));
@@ -1078,7 +1109,8 @@ function joinSheet(pre = '') {
       try {
         const name = await rpc('nestly_info', { p_code: code });
         if (!name) { err.textContent = '🤔 לא מצאנו בית עם הקוד הזה. כדאי לבדוק שוב'; btn.disabled = false; btn.textContent = '🚪 כניסה'; return; }
-        S = { code, records: {}, outbox: {}, cursor: null }; save();
+        if (homeCodes().includes(code)) { switchHome(code); return; }
+        useState({ code, records: {}, outbox: {}, cursor: null });
         await sync(); history.replaceState(null, '', location.pathname + '#home'); start();
         members().length ? whoAmISheet(true) : memberSheet(null, { forMe: true });
       } catch (x) { console.warn(x); err.textContent = '😕 אין חיבור לשרת כרגע. נסו שוב עוד רגע'; btn.disabled = false; btn.textContent = '🚪 כניסה'; }
@@ -1182,7 +1214,15 @@ document.addEventListener('click', e => {
     case 'new-me': memberSheet(null, { forMe: true }); break;
     case 'backup': backup(); break;
     case 'leave': leaveSheet(); break;
-    case 'leave-yes': localStorage.removeItem(KEY); S = { records: {}, outbox: {} }; closeSheet(); history.replaceState(null, '', location.pathname); onboarding(); setSync('local'); break;
+    case 'leave-yes': {
+      const gone = S.code, other = homeCodes().find(c => c !== gone && readHome(c)); setCodes(homeCodes().filter(c => c !== gone)); localStorage.removeItem(KEY); try { localStorage.removeItem(hKey(gone)); } catch { }
+      S = { records: {}, outbox: {} };
+      if (other) { useState(readHome(other)); closeSheet(); history.replaceState(null, '', location.pathname + '#home'); start(); refresh(); toast(`🏡 עברת ל"${esc(homeName())}"`); }
+      else { closeSheet(); history.replaceState(null, '', location.pathname); onboarding(); setSync('local'); }
+      break;
+    }
+    case 'homes': homesSheet(); break;
+    case 'home-switch': switchHome(id); break;
   }
 });
 
@@ -1200,7 +1240,7 @@ window.addEventListener('load', () => tab === 'family' && drawQR());
 const joinParam = new URLSearchParams(location.search).get('join');
 if (LISTMODE) listStart();
 else if (S.code && (!joinParam || joinParam.toUpperCase() === S.code)) { if (joinParam) history.replaceState(null, '', location.pathname + '#home'); start(); }
-else if (S.code && joinParam) { start(); sheet(`<h2 id="sheet-title">🏡 קישור לבית אחר</h2><p>כבר יש לך בית במכשיר הזה (${esc(homeName())}). כדי להצטרף לבית אחר צריך קודם לצאת מהבית הנוכחי בהגדרות.</p><div class="actions"><button class="btn primary" data-act="close">הבנתי</button></div>`); history.replaceState(null, '', location.pathname + '#home'); }
+else if (S.code && joinParam) { const jc = joinParam.toUpperCase().replace(/[^A-Z0-9]/g, ''); history.replaceState(null, '', location.pathname + '#home'); if (homeCodes().includes(jc) && readHome(jc)) switchHome(jc); else { start(); if (CLOUD) joinSheet(jc); } }
 else { onboarding(joinParam); setSync('local'); const h = location.hash.slice(1); if (LEGAL[h]) setTimeout(() => legalSheet(h), 300); }
 
 

@@ -85,6 +85,7 @@
       <p><b>💌 Join in seconds</b></p>
       <ul>
         <li>A <b>6 character household code</b>, a link or a QR</li>
+        <li><b>Several homes on one device</b> with quick switching</li>
         <li><b>No sign up, no passwords</b>, pick a name and an avatar</li>
         <li><b>Who am I</b> on this device, switchable any time</li>
       </ul>
