@@ -206,6 +206,7 @@ html[data-theme="dark"] .chip[aria-pressed="true"]{ background:var(--sky); color
 .page-h{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 4px 8px }
 .page-h h1{ position:relative }
 .page-h-btns{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end }
+@media (max-width:600px){ body.view-family .page-h{ flex-wrap:wrap } body.view-family .page-h h1{ flex:1 1 100%; font-size:1.5rem } body.view-family .page-h-btns{ flex:1 1 100%; justify-content:flex-start; flex-wrap:nowrap } body.view-family .page-h-btns .btn{ flex:1; min-height:40px!important; font-size:.9rem } }
 .page-h h1::after,.onb h1 .grad-txt::after{ content:""; position:absolute; height:.16em; border-radius:9px; background:var(--sky); transform-origin:right; animation:swoosh 1s var(--ease) both .3s }
 .page-h h1::after{ right:0; width:64%; bottom:-6px; height:5px }
 .group-t{ display:flex; align-items:center; gap:8px; font-size:.95rem; font-weight:700; color:var(--muted); margin:18px 6px 8px }
