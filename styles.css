@@ -692,3 +692,16 @@ html[data-theme="dark"] .sc-next{ color:#0d1830 }
 .link-box{ padding:12px 14px; border-radius:14px; background:var(--bg2); border:2px dashed var(--line-2); font-family:ui-monospace,Consolas,monospace; font-size:.86rem; word-break:break-all; margin:8px 0 12px; user-select:all }
 body.list-mode .tabbar,body.list-mode .topnav,body.list-mode .fab{ display:none!important }
 body.list-mode .site-foot{ padding-bottom:40px }
+
+/* ===== desktop layout: use the full width ===== */
+.fab{ width:50px; height:50px; border-radius:16px; font-size:1.6rem }
+@media (min-width:880px){
+  main,.site-foot{ max-width:1072px }
+  .fab{ width:50px; height:50px; border-radius:16px; font-size:1.55rem; bottom:32px; left:max(20px,calc(50% - 604px)) }
+  body.view-home #dyn,body.view-family #dyn{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:18px; align-items:start }
+  body.view-home #dyn > *,body.view-family #dyn > *{ grid-column:1/-1 }
+  body.view-home #dyn > section.card:not(.hello),body.view-family #dyn > section.card{ grid-column:auto }
+  .list{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+  .card .list{ grid-template-columns:1fr }
+}
+@media (min-width:880px) and (max-width:1210px){ .fab{ left:24px } main{ padding-left:92px } }
