@@ -695,13 +695,17 @@ body.list-mode .site-foot{ padding-bottom:40px }
 
 /* ===== desktop layout: use the full width ===== */
 .fab{ width:50px; height:50px; border-radius:16px; font-size:1.6rem }
+.top-add{ display:none }
 @media (min-width:880px){
   main,.site-foot{ max-width:1072px }
-  .fab{ width:50px; height:50px; border-radius:16px; font-size:1.55rem; bottom:32px; left:max(20px,calc(50% - 604px)) }
-  body.view-home #dyn,body.view-family #dyn{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:18px; align-items:start }
-  body.view-home #dyn > *,body.view-family #dyn > *{ grid-column:1/-1 }
-  body.view-home #dyn > section.card:not(.hello),body.view-family #dyn > section.card{ grid-column:auto }
-  .list{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+  .fab{ display:none!important }
+  .top-add:not([hidden]){ display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:0 16px; border-radius:14px; font-weight:700; font-size:.92rem; color:var(--navy); background:var(--grad-2); background-size:300% 100%; animation:flow 8s linear infinite; box-shadow:0 3px 0 #9cc0e0; transition:transform .2s var(--ease) }
+  .top-add:hover{ transform:translateY(-2px) } .top-add:active{ transform:translateY(2px); box-shadow:none }
+  html[data-theme="dark"] .top-add{ color:#0d1830; box-shadow:none }
+  /* cards flow into two balanced columns, no empty holes */
+  body.view-home #dyn,body.view-family #dyn{ columns:2; column-gap:18px }
+  body.view-home #dyn > *,body.view-family #dyn > *{ break-inside:avoid; column-span:all }
+  body.view-home #dyn > section.card:not(.hello),body.view-family #dyn > section.card{ column-span:none; width:100%; margin:0 0 18px }
+  .list{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
   .card .list{ grid-template-columns:1fr }
 }
-@media (min-width:880px) and (max-width:1210px){ .fab{ left:24px } main{ padding-left:92px } }

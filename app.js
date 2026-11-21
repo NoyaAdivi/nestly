@@ -392,6 +392,7 @@ function go(t, push = true) {
   scrollTo({ top: 0, behavior: calm() ? 'auto' : 'smooth' });
   $('#fab').hidden = t === 'shop' || LISTMODE;
   $('#fab').setAttribute('aria-label', { home: 'הוספה מהירה', tasks: 'משימה חדשה', family: 'הוספת בן או בת בית' }[t] || 'הוספה');
+  { const ta = $('#top-add'); if (ta) { ta.hidden = $('#fab').hidden; ta.lastElementChild.textContent = { home: 'הוספה', tasks: 'משימה חדשה', family: 'בן/בת בית' }[t] || 'הוספה'; } }
 }
 addEventListener('popstate', () => { const h = location.hash.slice(1); if (LEGAL[h]) return legalSheet(h); go(h || 'home', false); });
 function setView(v) { document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + v; }
@@ -1038,7 +1039,7 @@ function backup() {
 
 /* ----- ONBOARDING ----- */
 function onboarding(joinCode) {
-  $('#tabbar').hidden = true; $('#topnav').hidden = true; $('#fab').hidden = true; $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
+  $('#tabbar').hidden = true; $('#topnav').hidden = true; $('#fab').hidden = true; $('#top-add') && ($('#top-add').hidden = true); $('#home-name').textContent = 'הבית המשותף שלכם'; setView('onb');
   const feats = [['🧹', 'משימות שחוזרות לבד', 'כל יום, כל שבוע או בימים שבוחרים', 'sky'], ['🛒', 'רשימת קניות חכמה', 'מסודרת לפי מחלקות, גם בקול', 'mint'], ['🔄', 'תורנויות הוגנות', 'התור עובר לבד לבא בתור', 'peach'], ['🏆', 'נקודות ואלופי השבוע', 'קצת תחרות וקונפטי 🎉', 'sky']];
   main.innerHTML = `<div class="view onb">
     <section class="onb-hero">
